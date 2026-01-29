@@ -1,36 +1,35 @@
 from typing import Optional, Dict
 
+from app.domain.models.models import DistribucionApellidoDepartamento, Apellido, Frases
 
-def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: str) -> Dict[str, Optional[str]]:
-    """
-    Obtiene la información de un apellido según el apellido normalizado.
-    """
+def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: str) -> Dict:
+    apellido_obj = Apellido.objects.filter(apellido=apellido_normalizado).first()
 
-    # Simulación de apellidos existentes
-    if apellido_normalizado == "GOMEZ":
+    if apellido_obj:
+        distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=apellido_obj)
+        frases = Frases.objects.filter(apellido=apellido_obj)
+
         return {
             "estado": "encontrado",
+            "origen": apellido_obj.origen,
             "apellido_original": apellido_original,
-            "apellido_normalizado": apellido_normalizado,
-            "departamentos": [
-                {"nombre": "Caldas", "porcentaje": 40, "rango": 15},
-                {"nombre": "Cundinamarca", "porcentaje": 36, "rango": 22},
-                {"nombre": "Magdalena", "porcentaje": 24, "rango": 30},
-            ],
-            "frases": {
-                "personalidad": "Soy fuerte, soy cálido, soy honesto.",
-                "sabor": "El chocolate negro habla de profundidad, carácter y fuerza interior."
-            }
+            "apellido_normalizado": apellido_obj.apellido,
+            "departamentos": distribuciones,
+            "frases": frases
         }
-
+    
     return {
         "estado": "no_encontrado",
+        "origen": "IA",
         "apellido_original": apellido_original,
         "apellido_normalizado": apellido_normalizado,
-        "departamentos": [],
-        "mensaje": "Tu apellido es poco común, lo que lo hace especial.",
-        "frases": {
-            "personalidad": "Cada historia comienza con un nombre.",
-            "sabor": "Descubre tu sabor único."
-        }
+        "departamentos": [
+            {"departamento": "Caldas", "porcentaje": 40.0, "ranking": 1, "origen": "IA"},
+            {"departamento": "Cundinamarca", "porcentaje": 36.0, "ranking": 2, "origen": "IA"},
+            {"departamento": "Magdalena", "porcentaje": 24.0, "ranking": 3, "origen": "IA"},
+        ],
+        "frases": [
+            {"categoria": "PERSONALIDAD", "frase": "Cada historia comienza con un nombre.", "origen": "IA"},
+            {"categoria": "SABOR", "frase": "Descubre tu sabor único.", "origen": "IA"}
+        ]
     }

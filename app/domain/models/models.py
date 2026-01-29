@@ -8,18 +8,16 @@ ORIGEN_DATOS = [
 
 class Apellido(models.Model):
     apellido = models.CharField(max_length=30, unique=True)
-    ranking = models.IntegerField()
     origen = models.CharField(max_length=4, choices=ORIGEN_DATOS, default='REAL')
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"{self.apellido} - {self.ranking}"
+        return f"{self.apellido}"
 
     class Meta:
         db_table = "apellido"
         verbose_name = "Apellido"
         verbose_name_plural = "Apellidos"
-        ordering = ["ranking"]
 
     
 class Departamento(models.Model):
@@ -35,7 +33,7 @@ class Departamento(models.Model):
         ordering = ["nombre"]
 
 
-class DistribucionApellido(models.Model):
+class DistribucionApellidoDepartamento(models.Model):
     apellido = models.ForeignKey(Apellido, on_delete=models.CASCADE, related_name="distribuciones")
     departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name="apellido_distribuciones")
     porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
@@ -47,7 +45,7 @@ class DistribucionApellido(models.Model):
         return f"{self.apellido} - {self.departamento} - ({self.porcentaje}%)"
 
     class Meta:
-        db_table = "distribucion_apellido"
+        db_table = "distribucion_apellido_departamento"
         verbose_name = "Distribucion Apellido"
         verbose_name_plural = "Distribuciones Apellidos"
         ordering = ["ranking"]
