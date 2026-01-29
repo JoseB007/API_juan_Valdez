@@ -1,0 +1,16 @@
+# Entornos de desarrollo
+env/
+venv/
+
+# Archivos de log
+logs/
+
+# Archivos de cache
+__pycache__
+*.pyc
+
+# DB
+db.sqlite3
+
+# variables de entorno
+.env
