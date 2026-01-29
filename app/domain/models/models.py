@@ -36,8 +36,8 @@ class Departamento(models.Model):
 
 
 class DistribucionApellido(models.Model):
-    apellido = models.ForeignKey(Apellido, on_delete=models.CASCADE)
-    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE)
+    apellido = models.ForeignKey(Apellido, on_delete=models.CASCADE, related_name="distribuciones")
+    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE, related_name="apellido_distribuciones")
     porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
     ranking = models.PositiveIntegerField()
     origen = models.CharField(max_length=4, choices=ORIGEN_DATOS, default='REAL')
@@ -61,6 +61,7 @@ class Frases(models.Model):
     categoria = models.CharField(max_length=15, choices=CATEGORIAS)
     frase = models.TextField()
     origen = models.CharField(max_length=4, choices=ORIGEN_DATOS, default='REAL')
+    apellido = models.ForeignKey(Apellido, on_delete=models.CASCADE, related_name="frases")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
