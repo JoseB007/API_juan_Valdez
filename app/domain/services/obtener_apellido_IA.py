@@ -21,30 +21,19 @@ class ObtenerApellidoIA:
         ai_response = obtener_apellido_ai(self.apellido_normalizado)
         
         if ai_response:
-            # self._validar_ai_response(ai_response)
+            self._validar_ai_response(ai_response)
+            apellido_obj = self._crear_apellido(ai_response)
 
-            # return self._crear_apellido(ai_response)
+            distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=apellido_obj)
+            frases = Frases.objects.filter(apellido=apellido_obj)
 
             return {
-                "estado": "no_encontrado",
-                "origen": ai_response['origen'],
+                "estado": "encontrado",
+                "origen": "IA",
                 "apellido_original": self.apellido_original,
-                "apellido_normalizado": self.apellido_normalizado,
-                "departamentos": [
-                    {
-                        "departamento": dist['departamento'], 
-                        "porcentaje": dist['porcentaje'],
-                        "ranking": dist['ranking'], 
-                        "origen": "IA"
-                    } for dist in ai_response['distribuciones']
-                ],
-                "frases": [
-                    {
-                        "categoria": f['categoria'], 
-                        "frase": f['texto'], 
-                        "origen": "IA"
-                    } for f in ai_response['frases']
-                ]
+                "apellido_normalizado": apellido_obj.apellido,
+                "departamentos": distribuciones,
+                "frases": frases
             }
 
         else:
@@ -73,7 +62,7 @@ class ObtenerApellidoIA:
     def _crear_apellido(self, ai_response: Dict) -> Apellido:
         apellido_obj, _ = Apellido.objects.get_or_create(
             apellido=ai_response['apellido'],
-            origen=ai_response['origen'],
+            defaults={'origen': ai_response['origen']}
         )
 
         for dist in ai_response['distribuciones']:
@@ -83,17 +72,19 @@ class ObtenerApellidoIA:
             DistribucionApellidoDepartamento.objects.get_or_create(
                 apellido=apellido_obj,
                 departamento=departamento,
-                porcentaje=dist['porcentaje'],
-                ranking=dist['ranking'],
-                origen='IA',
+                defaults={
+                    'porcentaje': dist['porcentaje'],
+                    'ranking': dist['ranking'],
+                    'origen': 'IA'
+                }
             )
 
         for frase in ai_response['frases']:
-            Frases.objects.create(
-                categoria=frase['categoria'],
-                frase=frase('texto'),
-                origen='IA',
+            Frases.objects.get_or_create(
                 apellido=apellido_obj,
+                categoria=frase['categoria'],
+                frase=frase['texto'],
+                defaults={'origen': 'IA'}
             )
 
         return apellido_obj
