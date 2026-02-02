@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+ENVIRONMENT=os.environ.get('ENVIRONMENT')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,12 +26,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tvd6wf$+#2#e-=-uct%7p%a%-_c#ebd3%h%^(87_6k5-iczg5('
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if ENVIRONMENT == "desarrollo":
+    DEBUG = True
+else:
+    DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = list(os.environ.get('ALLOWED_HOSTS').split(','))
 
 
 # Application definition
@@ -126,8 +131,8 @@ STATIC_URL = 'static/'
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    os.environ.get('CORS_ALLOWED_ORIGINS')
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
+    os.environ.get('CSRF_TRUSTED_ORIGINS')
 ]
