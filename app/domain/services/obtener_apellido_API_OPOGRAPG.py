@@ -99,7 +99,7 @@ class ObtenerApellidoAPIOpograph:
             'name': self.apellido_normalizado,
             'type': 'surname',
             'jurisdiction': 'co',
-            'limit': 3
+            # 'limit': 3
         }
 
         response = self.peticion_api(URL, PARAMETROS)
@@ -110,15 +110,42 @@ class ObtenerApellidoAPIOpograph:
                 "estado": "error",
                 "mensaje": "No se pudo obtener datos de la API"
             }
+        
+        REGIONES = {
+            "Huila",
+            "Nariño",
+            "Antioquia",
+            "Santander",
+            "Cauca",
+            "Valle del Cauca",
+            "Caldas",
+            "Tolima",
+            "Sierra Nevada",
+            "Boyacá",
+            "La Guajira",
+            "Risaralda",
+            "Cundinamarca",
+            "Cesar",
+            "Quindío",
+        }
 
         # Construimos la lista de distribuciones si la respuesta es exitosa
         distribuciones = [
             {
-                "porcentaje": depart.get('percent', 0),
+                "incidencia": depart.get('incidence'),
                 "ranking": depart.get('rank', 0),
-                "departamento": depart.get('jurisdiction', 'Desconocido')
+                "departamento": depart.get('jurisdiction', 'Desconocido').split(" Department")[0].strip()
             }
-            for depart in response.get('jurisdictions', [])
-        ]
+            for depart in response.get('jurisdictions', []) if depart['jurisdiction'].split(" Department")[0] in REGIONES
+        ][:3]
+
+        total_incidencia = sum(d['incidencia'] for d in distribuciones)
+
+        if total_incidencia > 0:
+            for d in distribuciones:
+                d['porcentaje'] = (d['incidencia'] * 100) / total_incidencia
+        else:
+            for d in distribuciones:
+                d['porcentaje'] = 0
         
         return self.generar_apellido_distribuciones(distribuciones)
