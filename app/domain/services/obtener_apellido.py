@@ -1,7 +1,8 @@
-from typing import Optional, Dict
+from typing import Dict
 
 from app.domain.models.models import DistribucionApellidoDepartamento, Apellido, Frases
 from app.domain.services.obtener_apellido_IA import ObtenerApellidoIA
+from app.domain.services.obtener_apellido_API_OPOGRAPG import ObtenerApellidoAPIOpograph
 
 
 def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: str) -> Dict:
@@ -20,6 +21,11 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
             "frases": frases
         }
     else:
-        servicio = ObtenerApellidoIA(apellido_normalizado, apellido_original)
+        servicio = ObtenerApellidoAPIOpograph(apellido_normalizado, apellido_original)
+        apellido = servicio.ejecutar()
 
-        return servicio.ejecutar()
+        if apellido['estado'] == "error":
+            servicio = ObtenerApellidoIA(apellido_normalizado, apellido_original)
+            return servicio.ejecutar()
+
+        return apellido

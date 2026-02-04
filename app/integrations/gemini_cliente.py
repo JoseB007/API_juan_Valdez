@@ -3,21 +3,27 @@ import json
 from typing import Dict
 from google import genai
 
-from app.schemas.ai_response_schema import AI_RESPONSE_SCHEMA
-
 
 class GeminiIACliente:
-    def __init__(self):
+    def __init__(self, schema: Dict):
         self.cliente = genai.Client()
         self.config_generacion = {
             "response_mime_type": "application/json",
-            "response_schema": AI_RESPONSE_SCHEMA,
+            "response_schema": schema,
             "temperature": 0.1,
         }
 
-    def obtener_apellido(self, apellido: str) -> Dict:
-        prompt = self._ai_prompt(apellido)
+    def obtener_apellido_distribuciones(self, apellido: str) -> Dict:
+        prompt = self._ai_prompt_apellido(apellido)
 
+        return self.ejecutar_modelo(prompt)
+        
+    def obtener_frases_apellido(self, apellido: str, dist: Dict) -> Dict:
+        prompt = self._ai_prompt_frases_apellido(apellido, dist)
+
+        return self.ejecutar_modelo(prompt)
+
+    def ejecutar_modelo(self, prompt: str):
         try:
             response = self.cliente.models.generate_content(
                 model="gemini-2.5-flash",
@@ -31,7 +37,7 @@ class GeminiIACliente:
         except Exception as e:
             return None
         
-    def _ai_prompt(self, apellido: str):
+    def _ai_prompt_apellido(self, apellido: str):
         return f"""
         Analiza el término '{apellido}'. 
 
@@ -45,39 +51,14 @@ class GeminiIACliente:
         2. Genera 4 frases obligatorias:
             - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
             - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
-        3. 'confianza' debe ser bajo si el apellido es extranjero o muy raro en Colombia.
         """
 
-# class GeminiIACliente:
-#     def __init__(self):
-#         self.cliente = genai.Client()
-
-#     def obtener_apellido(self, apellido: str) -> Dict:
-#         prompt = self._ai_prompt(apellido)
-
-#         try:
-#             response = self.cliente.models.generate_content(
-#                 model="gemini-3-flash-preview",
-#                 contents=prompt
-#             )
-
-#             contenido = response.text
-
-#             return json.loads(contenido)
-#         except Exception as e:
-#             print(f"Error al consultar GeminiAI: {e}")
-#             return None
+    def _ai_prompt_frases_apellido(self, apellido: str, distribuciones: Dict):
+        return f"""
+        Analiza el término '{apellido}' y las distribuciones por departamento de ese apellido: '{distribuciones}'. 
         
-#     def _ai_prompt(self, apellido: str):
-#         return f"""
-#         Inferir estadísticas de apellidos para Colombia.
-
-#         Apellido: {apellido}
-#         Lenguaje: Español
-
-#         Reglas:
-#         - Devolver SOLO JSON
-#         - Reducir la confianza si no hay certeza
-
-#         JSON estructura: {AI_RESPONSE_SCHEMA}
-#         """
+        TAREA DE GENERACIÓN:
+        1. Genera 4 frases obligatorias:
+            - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
+            - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
+        """
