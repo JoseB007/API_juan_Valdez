@@ -4,7 +4,7 @@
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/JoseB007/proyecto_JV.git
+git clone https://github.com/JoseB007/API_juan_Valdez.git
 cd API_juan_Valdez
 ```
 
