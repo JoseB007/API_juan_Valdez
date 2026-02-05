@@ -1,5 +1,6 @@
 from typing import Dict
 from jsonschema import validate, ValidationError
+from django.db import transaction
 
 from app.domain.models.models import (
     Apellido,
@@ -57,30 +58,50 @@ class ObtenerApellidoIA:
             raise ValueError(f"Error al validar la respuesta del AI: {e}")
 
     def _crear_apellido(self, ai_response: Dict) -> Apellido:
-        apellido_obj, _ = Apellido.objects.get_or_create(
-            apellido=ai_response['apellido'],
-            defaults={'fuente': 'IA Gemini'}
-        )
+        REGIONES = {
+            "Huila": "Uno de los principales productores nacionales.",
+            "Nariño": "Perfiles dulces y aromáticos.",
+            "Antioquia": "Conocido por su cuerpo y balance",
+            "Santander": "Con notas herbales y aroma pronunciado.",
+            "Cauca": "Sabores complejos y equilibrados.",
+            "Valle del Cauca": "Perfiles con carácter.",
+            "Caldas": "Parte del paisaje Cultural Cafetero.",
+            "Tolima": "Suave y balanceado.",
+            "Sierra Nevada": "Intensidad y notas unicas de esta región.",
+            "Boyacá": "Por definir.",
+            "La Guajira": "Con matices cítricos y refrescantes.",
+            "Risaralda": "Equilibrio y notas frutales.",
+            "Cundinamarca": "Perfil característico de su región cafetera.",
+            "Cesar": "Café con notas dulces y balanceadas.",
+            "Quindío": "Parte del Eje Cafetero con aroma y suavidad destacada.",
+        }
 
-        for dist in ai_response['distribuciones']:
-            departamento, _ = Departamento.objects.get_or_create(
-                nombre=dist['departamento']
-            )
-            DistribucionApellidoDepartamento.objects.get_or_create(
-                apellido=apellido_obj,
-                departamento=departamento,
-                defaults={
-                    'porcentaje': dist['porcentaje'],
-                    'ranking': dist['ranking'],
-                }
+        with transaction.atomic():
+            apellido_obj, _ = Apellido.objects.get_or_create(
+                apellido=ai_response['apellido'],
+                defaults={'fuente': 'IA Gemini'}
             )
 
-        for frase in ai_response['frases']:
-            Frases.objects.get_or_create(
-                categoria=frase['categoria'],
-                frase=frase['texto'],
-                apellido=apellido_obj,
-            )
+            for dist in ai_response['distribuciones']:
+                departamento, _ = Departamento.objects.get_or_create(
+                    nombre=dist['departamento'],
+                    frase=REGIONES[dist['departamento']]
+                )
+                DistribucionApellidoDepartamento.objects.get_or_create(
+                    apellido=apellido_obj,
+                    departamento=departamento,
+                    defaults={
+                        'porcentaje': dist['porcentaje'],
+                        'ranking': dist['ranking'],
+                    }
+                )
 
-        return apellido_obj
+            for frase in ai_response['frases']:
+                Frases.objects.get_or_create(
+                    categoria=frase['categoria'],
+                    frase=frase['texto'],
+                    apellido=apellido_obj,
+                )
+
+            return apellido_obj
         

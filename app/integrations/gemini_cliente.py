@@ -66,7 +66,8 @@ class GeminiIACliente:
         
         TAREA DE GENERACIÓN (Solo si 'es_apellido_real' es true):
         1. Genera estadísticas demográficas para el apellido '{apellido}' en Colombia, teniendo en cuenta únicamente las regiones a continuación: {REGIONES}.
-        2. Dentro de las distribuciones demográficas, asegura que la suma total entre los porcentajes sea del 100%. Asigna a cada distribución el porcentaje más indicado.
+        2. Dentro de las distribuciones demográficas, asegura que la suma total entre los porcentajes sea del 100%. Asigna a cada distribución el porcentaje más indicado, por ej. 50.3%
+        3. Intenta generar el ranking de cada distribución de forma aleatoria entre 1 y 100, y no que las distribuciones sean, por ej. ranking 1, 2 y 3.
         3. Genera 4 frases obligatorias:
             - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
             - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
