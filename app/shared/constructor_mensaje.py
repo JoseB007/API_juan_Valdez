@@ -13,13 +13,13 @@ class ConstructorMensajeCompartido:
     """
     Constructor de mensaje compartido que crea un mensaje con el asunto y el cuerpo.
     """
-    def _construir(self, distribuciones: Dict, apellido) -> MensajeCompartido:
+    def construir(self, apellido, distribuciones: Dict) -> MensajeCompartido:
         return MensajeCompartido(
-            asunto="Resultado de búsqueda de distribuciones",
-            cuerpo=self._construir_cuerpo(distribuciones, apellido)
+            asunto=f"Resultado de búsqueda para el apellido {apellido}",
+            cuerpo=self.construir_cuerpo(distribuciones, apellido)
         )
 
-    def _construir_cuerpo(self, distribuciones: Dict, apellido) -> str:
+    def construir_cuerpo(self, distribuciones: Dict, apellido) -> str:
         lineas = []
 
         if distribuciones:

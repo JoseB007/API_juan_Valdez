@@ -1,7 +1,7 @@
 from typing import Dict
 
 from .constructor_mensaje import ConstructorMensajeCompartido
-from .email_sender import EmailSender
+from .email_sender import EmailSender, ResultadoCompartido, EstadoCompartido
 from ..domain.models.models import DistribucionApellidoDepartamento, Apellido
 
 
@@ -11,26 +11,26 @@ class Compartir:
         self.canal = canal
         self.destinatario = destinatario
 
-    def _obtener_obj_apellido(self):
+    def obtener_obj_apellido(self):
         try:
             apellido = Apellido.objects.get(apellido=self.apellido)
             return apellido
         except Apellido.DoesNotExist:
             raise ValueError("Apellido no encontrado")
         
-    def _obtener_distribuciones(self):
-        distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=self._obtener_obj_apellido())
+    def obtener_distribuciones(self):
+        distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=self.obtener_obj_apellido())
         return distribuciones
 
-    def _compartir(self, distribuciones: Dict):
+    def compartir(self, distribuciones: Dict):
         try:
-            apellido_obj = self._obtener_obj_apellido()
+            apellido_obj = self.obtener_obj_apellido()
             constructor_mensaje = ConstructorMensajeCompartido()
-            mensaje = constructor_mensaje._construir(distribuciones, apellido_obj)
+            mensaje = constructor_mensaje.construir(apellido_obj, distribuciones)
 
             if self.canal == "email":
                 email_sender = EmailSender()
-                email_sender._send(
+                return email_sender.send(
                     asunto=mensaje.asunto, 
                     cuerpo=mensaje.cuerpo, 
                     destinatario=self.destinatario
@@ -38,14 +38,16 @@ class Compartir:
             # elif self.canal == "whatsapp":
             #     whatsapp_sender = WhatsAppSender()
             #     whatsapp_sender.send(mensaje.cuerpo)
-            else:
-                raise ValueError("Canal no soportado")
-
+            return ResultadoCompartido(
+                estado=EstadoCompartido.FALLIDO,
+                canal="email",
+                mensaje="Canal no soportado."
+            )
         except Exception as e:
             print(f"Error al compartir: {str(e)}")
 
     def ejecutar(self):
-        distribuciones = self._obtener_distribuciones()
-        self._compartir(distribuciones)
+        distribuciones = self.obtener_distribuciones()
+        self.compartir(distribuciones)
             
         
