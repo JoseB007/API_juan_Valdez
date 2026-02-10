@@ -55,7 +55,7 @@ class CompartirView(APIView):
             servicio = ServicioCompartir(apellido_normalizado, canal, destinatario)
             resultado = servicio.ejecutar()
             
-            http_status = status.HTTP_200_OK if resultado.estado == EstadoEnvio.ACEPTADO else status.HTTP_400_BAD_REQUEST
+            http_status = status.HTTP_202_ACCEPTED if resultado.estado == EstadoEnvio.ACEPTADO else status.HTTP_400_BAD_REQUEST
             response = RespuestaCompartirSerializer(resultado)
 
             return Response(

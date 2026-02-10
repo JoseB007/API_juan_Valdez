@@ -1,7 +1,8 @@
 from typing import Dict
 
 from .generar_mensaje import GeneradorMensaje
-from .email_sender import EnviadorCorreo, ResultadoEnvio, EstadoEnvio
+from .email_sender import ResultadoEnvio, EstadoEnvio
+from .tasks import tarea_compartir_email
 from ..domain.models.models import DistribucionApellidoDepartamento, Apellido
 
 
@@ -29,16 +30,17 @@ class ServicioCompartir:
             mensaje = generador_mensaje.generar(apellido_obj, distribuciones)
 
             if self.canal == "email":
-                enviador = EnviadorCorreo()
-                return enviador.enviar(
-                    asunto=mensaje.asunto, 
-                    cuerpo=mensaje.cuerpo, 
+                tarea_compartir_email.delay(
+                    asunto=mensaje.asunto,
+                    cuerpo=mensaje.cuerpo,
                     destinatario=self.destinatario,
-                    cuerpo_html=mensaje.cuerpo_html
+                    cuerpo_html=mensaje.cuerpo_html,
                 )
-            # elif self.canal == "whatsapp":
-            #     whatsapp_sender = WhatsAppSender()
-            #     whatsapp_sender.send(mensaje.cuerpo)
+                return ResultadoEnvio(
+                    estado=EstadoEnvio.ACEPTADO,
+                    canal=self.canal,
+                    mensaje="La solicitud de envío ha sido aceptada y se está procesando en segundo plano."
+                )
             return ResultadoEnvio(
                 estado=EstadoEnvio.FALLIDO,
                 canal=self.canal,
