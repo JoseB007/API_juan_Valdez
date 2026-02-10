@@ -17,7 +17,7 @@ class ResultadoEnvio:
 
 
 class EnviadorCorreo:
-    def enviar(self, asunto: str, cuerpo: str, destinatario: str):
+    def enviar(self, asunto: str, cuerpo: str, destinatario: str, cuerpo_html: str = None):
         try:
             email = EmailMultiAlternatives(
                 subject=asunto,
@@ -25,6 +25,8 @@ class EnviadorCorreo:
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[destinatario],
             )
+            if cuerpo_html:
+                email.attach_alternative(cuerpo_html, "text/html")
             email.send()
 
             return ResultadoEnvio(

@@ -33,7 +33,8 @@ class ServicioCompartir:
                 return enviador.enviar(
                     asunto=mensaje.asunto, 
                     cuerpo=mensaje.cuerpo, 
-                    destinatario=self.destinatario
+                    destinatario=self.destinatario,
+                    cuerpo_html=mensaje.cuerpo_html
                 )
             # elif self.canal == "whatsapp":
             #     whatsapp_sender = WhatsAppSender()
