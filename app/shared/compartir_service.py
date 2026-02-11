@@ -30,17 +30,24 @@ class ServicioCompartir:
             mensaje = generador_mensaje.generar(apellido_obj, distribuciones)
 
             if self.canal == "email":
-                tarea_compartir_email.delay(
-                    asunto=mensaje.asunto,
-                    cuerpo=mensaje.cuerpo,
-                    destinatario=self.destinatario,
-                    cuerpo_html=mensaje.cuerpo_html,
-                )
-                return ResultadoEnvio(
-                    estado=EstadoEnvio.ACEPTADO,
-                    canal=self.canal,
-                    mensaje="La solicitud de envío ha sido aceptada y se está procesando en segundo plano."
-                )
+                try:
+                    tarea_compartir_email.delay(
+                        asunto=mensaje.asunto,
+                        cuerpo=mensaje.cuerpo,
+                        destinatario=self.destinatario,
+                        cuerpo_html=mensaje.cuerpo_html,
+                    )
+                    return ResultadoEnvio(
+                        estado=EstadoEnvio.ACEPTADO,
+                        canal=self.canal,
+                        mensaje="La solicitud de envío ha sido aceptada y se está procesando en segundo plano."
+                    )
+                except Exception as e:
+                    return ResultadoEnvio(
+                        estado=EstadoEnvio.FALLIDO,
+                        canal=self.canal,
+                        mensaje=f"No se pudo programar el envío. El servicio de colas puede estar no disponible. Detalles: {str(e)}"
+                    )
             return ResultadoEnvio(
                 estado=EstadoEnvio.FALLIDO,
                 canal=self.canal,
