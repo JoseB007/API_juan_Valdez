@@ -2,7 +2,12 @@ from celery import shared_task
 from .email_sender import EnviadorCorreo
 
 
-@shared_task()
+@shared_task(
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=3,
+    retry_jitter=True
+)
 def tarea_compartir_email(asunto: str, cuerpo: str, destinatario: str, cuerpo_html: str = None):
     enviador = EnviadorCorreo()
     enviador.enviar(
