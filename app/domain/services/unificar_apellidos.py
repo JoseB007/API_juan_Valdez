@@ -54,6 +54,21 @@ class UnificarApellidosService:
                 "ranking": avg_ranking
             })
 
+        # Ordenar por porcentaje descendente y tomar los 3 primeros
+        distribuciones_finales = sorted(
+            distribuciones_finales, 
+            key=lambda x: x["porcentaje"], 
+            reverse=True
+        )[:3]
+
+        # Normalizar porcentajes para que sumen 100%
+        if distribuciones_finales:
+            total_porcentaje = sum(d["porcentaje"] for d in distribuciones_finales)
+            if total_porcentaje > 0:
+                for d in distribuciones_finales:
+                    d["porcentaje"] = round((d["porcentaje"] / total_porcentaje) * 100, 2)
+                
+
         # Combinar frases (sin duplicados exactos)
         frases_finales = []
         vistas_frases = set()
