@@ -4,13 +4,34 @@ from typing import Dict
 def apellido_no_encontrado() -> Dict:
     return {
     "estado": "no_encontrado",
-    "origen": "REAL",
+    "fuente": "REAL",
     "apellido_original": "Genérico",
     "apellido_normalizado": "GENERICO",
-    "departamentos": [
-        {"departamento": "Caldas", "porcentaje": 40.0, "ranking": 1, "origen": "REAL"},
-        {"departamento": "Cundinamarca", "porcentaje": 36.0, "ranking": 2, "origen": "REAL"},
-        {"departamento": "Magdalena", "porcentaje": 24.0, "ranking": 3, "origen": "REAL"},
+    "distribuciones": [
+        {
+            "departamento": {
+                "nombre": "",
+                "frase": ""
+            },
+            "porcentaje": 40.0, 
+            "ranking": 1,
+        },
+                {
+            "departamento": {
+                "nombre": "",
+                "frase": ""
+            },
+            "porcentaje": 40.0, 
+            "ranking": 1,
+        },
+                {
+            "departamento": {
+                "nombre": "",
+                "frase": ""
+            },
+            "porcentaje": 40.0, 
+            "ranking": 1,
+        },
     ],
     "frases": [
         {"categoria": "PERSONALIDAD", "frase": "Cada historia comienza con un nombre.", "origen": "REAL"},

@@ -2,8 +2,18 @@ from django.db import models
 
 
 class Apellido(models.Model):
+    PENDIENTE = 'Pendiente'
+    LISTO = 'Listo'
+    FALLIDO = 'Fallido'
+    ESTADOS = (
+        (PENDIENTE, 'Pendiente'),
+        (LISTO, 'Listo'),
+        (FALLIDO, 'Fallido'),
+    )
     apellido = models.CharField(max_length=30, unique=True)
+    estado = models.CharField(choices=ESTADOS, default=PENDIENTE)
     fuente = models.CharField(max_length=150)
+    es_inferido = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -13,6 +23,13 @@ class Apellido(models.Model):
         db_table = "apellido"
         verbose_name = "Apellido"
         verbose_name_plural = "Apellidos"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['apellido', 'estado'],
+                name='unique_apellido_estado'
+            )
+        ]
 
     
 class Departamento(models.Model):

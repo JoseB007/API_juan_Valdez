@@ -22,34 +22,45 @@ class ObtenerApellidoIA:
         self.apellido_original = apellido_original
 
     def ejecutar(self) -> Dict:
-        ai_response = generar_apellido_ia(self.apellido_normalizado)
-        
-        if ai_response:
-            self._validar_ai_response(ai_response)
-
-            if not ai_response['es_apellido_real']:
-                raise ApellidoInvalidoError(
-                    f"Error al digitar el apellido. {self.apellido_original} no es un apellido válido."
-                )
+        try:
+            ai_response = generar_apellido_ia(self.apellido_normalizado)
             
-            if ai_response['es_apellido_extranjero']:
-                return apellido_extranjero()
+            if ai_response:
+                self._validar_ai_response(ai_response)
 
-            apellido_obj = self._crear_apellido(ai_response)
+                if not ai_response['es_apellido_real']:
+                    # self._marcar_como_fallido()
+                    raise ApellidoInvalidoError(
+                        f"Error al digitar el apellido. {self.apellido_original} no es un apellido válido."
+                    )
+                
+                if ai_response['es_apellido_extranjero']:
+                    # # Lo marcamos listo aunque sea extranjero porque ya se procesó
+                    # apellido_obj = Apellido.objects.filter(apellido=self.apellido_normalizado).first()
+                    # if apellido_obj:
+                    #     apellido_obj.estado = Apellido.LISTO
+                    #     apellido_obj.save()
+                    return apellido_extranjero()
 
-            distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=apellido_obj)
-            frases = Frases.objects.filter(apellido=apellido_obj)
+                apellido_obj = self._crear_apellido(ai_response)
 
-            return {
-                "estado": "encontrado",
-                "fuente": apellido_obj.fuente,
-                "apellido_original": self.apellido_original,
-                "apellido_normalizado": apellido_obj.apellido,
-                "distribuciones": distribuciones,
-                "frases": frases
-            }
-        else:
-            return apellido_no_encontrado()
+                distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=apellido_obj)
+                frases = Frases.objects.filter(apellido=apellido_obj)
+
+                return {
+                    "estado": "encontrado",
+                    "fuente": apellido_obj.fuente,
+                    "apellido_original": self.apellido_original,
+                    "apellido_normalizado": apellido_obj.apellido,
+                    "distribuciones": distribuciones,
+                    "frases": frases
+                }
+            else:
+                self._marcar_como_fallido()
+                return apellido_no_encontrado()
+        except Exception as e:
+            self._marcar_como_fallido()
+            raise e
         
     def _validar_ai_response(self, ai_response: Dict):
         try:
@@ -77,10 +88,14 @@ class ObtenerApellidoIA:
         }
 
         with transaction.atomic():
-            apellido_obj, _ = Apellido.objects.get_or_create(
+            apellido_obj, created = Apellido.objects.get_or_create(
                 apellido=ai_response['apellido'],
-                defaults={'fuente': 'IA Gemini'}
+                defaults={'estado': Apellido.PENDIENTE, 'fuente': 'IA Gemini'}
             )
+
+            if not created:
+                apellido_obj.fuente = 'IA Gemini'
+                apellido_obj.es_inferido = True
 
             for dist in ai_response['distribuciones']:
                 departamento, _ = Departamento.objects.get_or_create(
@@ -103,5 +118,14 @@ class ObtenerApellidoIA:
                     apellido=apellido_obj,
                 )
 
+            apellido_obj.estado = Apellido.LISTO
+            apellido_obj.save()
+
             return apellido_obj
+
+    def _marcar_como_fallido(self):
+        apellido_obj = Apellido.objects.filter(apellido=self.apellido_normalizado).first()
+        if apellido_obj:
+            apellido_obj.estado = Apellido.FALLIDO
+            apellido_obj.save()
         
