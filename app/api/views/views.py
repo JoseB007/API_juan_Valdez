@@ -21,29 +21,30 @@ class ApellidoView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        try:
-            lista_apellidos = serializer.context["lista_apellidos"]
-            lista_originales = serializer.context["lista_originales"]
-            
-            resultados = []
-            for norm, orig in zip(lista_apellidos, lista_originales):
-                info = obtener_informacion_apellido(norm, orig)
-                resultados.append(info)
-            
-            unificador = UnificarApellidosService()
-            resultado_unificado = unificador.ejecutar(resultados)
-            
-            response = DistribucionApellidoRespuestaSerializer(resultado_unificado)
-            
+        lista_apellidos = serializer.context["lista_apellidos"]
+        lista_originales = serializer.context["lista_originales"]
+        
+        resultados = []
+        for norm, orig in zip(lista_apellidos, lista_originales):
+            info = obtener_informacion_apellido(norm, orig)
+            resultados.append(info)
+        
+        unificador = UnificarApellidosService()
+        resultado_unificado = unificador.ejecutar(resultados)
+        
+        estado = resultado_unificado.get('estado')
+        if estado not in ["encontrado", "procesando"]:
             return Response(
-                response.data,
-                status=status.HTTP_200_OK
+                {"mensaje": resultado_unificado.get("mensaje", "No se encontró información")},
+                status=status.HTTP_404_NOT_FOUND if estado == "no_encontrado" else status.HTTP_400_BAD_REQUEST
             )
-        except Exception as e:
-            return Response(
-                {"mensaje": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
+        response = DistribucionApellidoRespuestaSerializer(resultado_unificado)
+        
+        return Response(
+            response.data,
+            status=status.HTTP_200_OK if estado == "encontrado" else status.HTTP_202_ACCEPTED
+        )
 
     def get(self, request, apellido):
         resultado_validacion = validar_apellido(apellido)
@@ -54,39 +55,31 @@ class ApellidoView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        try:
-            lista_apellidos = resultado_validacion["lista_apellidos"]
-            lista_originales = resultado_validacion["lista_originales"]
-            
-            resultados = []
-            for norm, orig in zip(lista_apellidos, lista_originales):
-                info = obtener_informacion_apellido(norm, orig)
-                resultados.append(info)
-            
-            unificador = UnificarApellidosService()
-            resultado_unificado = unificador.ejecutar(resultados)
 
-            estado = resultado_unificado.get('estado')
-            if estado == "encontrado":
-                http_status = status.HTTP_200_OK
-            elif estado == "procesando":
-                http_status = status.HTTP_202_ACCEPTED
-            elif estado == "no_encontrado":
-                http_status = status.HTTP_404_NOT_FOUND
-            else:
-                http_status = status.HTTP_400_BAD_REQUEST
+        lista_apellidos = resultado_validacion["lista_apellidos"]
+        lista_originales = resultado_validacion["lista_originales"]
+        
+        resultados = []
+        for norm, orig in zip(lista_apellidos, lista_originales):
+            info = obtener_informacion_apellido(norm, orig)
+            resultados.append(info)
+        
+        unificador = UnificarApellidosService()
+        resultado_unificado = unificador.ejecutar(resultados)
 
-            response = DistribucionApellidoRespuestaSerializer(resultado_unificado)
-            
+        estado = resultado_unificado.get('estado')
+        if estado not in ["encontrado", "procesando"]:
             return Response(
-                response.data,
-                status=http_status
+                {"mensaje": resultado_unificado.get("mensaje", "No se encontró información")},
+                status=status.HTTP_404_NOT_FOUND if estado == "no_encontrado" else status.HTTP_400_BAD_REQUEST
             )
-        except Exception as e:
-            return Response(
-                {"mensaje": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
+        response = DistribucionApellidoRespuestaSerializer(resultado_unificado)
+        
+        return Response(
+            response.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class CompartirView(APIView):

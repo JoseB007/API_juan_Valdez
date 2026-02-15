@@ -58,7 +58,7 @@ class ObtenerApellidoIA:
     def _crear_apellido(self, ai_response: Dict) -> Apellido:
         with transaction.atomic():
             apellido_obj, created = Apellido.objects.get_or_create(
-                apellido=ai_response['apellido'],
+                apellido=self.apellido_normalizado,
                 defaults={'estado': Apellido.PENDIENTE, 'fuente': 'IA Gemini'}
             )
 

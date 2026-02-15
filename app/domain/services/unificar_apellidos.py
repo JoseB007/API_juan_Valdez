@@ -16,8 +16,8 @@ class UnificarApellidosService:
 
         if "procesando" in estados:
             estado_unificado = "procesando"
-        elif "no_econtrado" in estados:
-            estado_unificado = "no_econtrado"
+        elif "no_encontrado" in estados:
+            estado_unificado = "no_encontrado"
         elif "encontrado" in estados:
             estado_unificado = "encontrado"
         elif "error" in estados:

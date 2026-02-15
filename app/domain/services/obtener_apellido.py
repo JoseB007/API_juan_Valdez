@@ -43,7 +43,7 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
     servicio = ObtenerApellidoAPIOnograph(apellido_normalizado, apellido_original)
     resultado = servicio.ejecutar()
 
-    if resultado.get('estado') == "error":
+    if resultado.get('estado') == "no_encontrado":
         servicio_ia = ObtenerApellidoIA(apellido_normalizado, apellido_original)
         return servicio_ia.ejecutar()
 

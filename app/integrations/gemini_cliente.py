@@ -9,7 +9,11 @@ from app.api.exceptions.apellido_exceptions import IntegracionIAError
 
 class GeminiIACliente:
     def __init__(self, schema: Dict):
-        self.cliente = genai.Client()
+        try:
+            self.cliente = genai.Client()
+        except ValueError as e:
+            raise IntegracionIAError(f"Error de configuración de la IA: {str(e)}")
+        
         self.config_generacion = {
             "response_mime_type": "application/json",
             "response_schema": schema,

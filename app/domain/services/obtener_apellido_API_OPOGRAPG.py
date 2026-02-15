@@ -29,9 +29,18 @@ class ObtenerApellidoAPIOnograph:
             
             response.raise_for_status()
             
-            return response.json()
+            data = response.json()
+            
+            if 'status' in data:
+                for status_item in data['status']:
+                    if status_item.get('type') == 'error':
+                        raise ExternalAPIError(status_item.get('message', 'Error desconocido en la API externa'))
+            
+            return data
         except requests.exceptions.HTTPError as e:
             raise ExternalAPIError(f"Error de la API externa (HTTP {e.response.status_code})")
+        except ExternalAPIError:
+            raise
         except Exception as e:
             raise ExternalAPIError(f"Error inesperado al conectar con la API: {str(e)}")
 
@@ -109,7 +118,7 @@ class ObtenerApellidoAPIOnograph:
         # Validamos que la respuesta contenga datos
         if 'jurisdictions' not in response:
             return {
-                "estado": "error",
+                "estado": "no_encontrado",
                 "mensaje": "No se pudo obtener datos de la API"
             }
         
