@@ -5,6 +5,7 @@ from rest_framework import status
 from app.api.serializers.apellido_serializer import ApellidoEntradaSerializer, DistribucionApellidoRespuestaSerializer
 from app.api.serializers.compartir_serializer import SolicitudCompartirSerializer, RespuestaCompartirSerializer
 from app.domain.services.obtener_apellido import obtener_informacion_apellido, consultar_estado_apellido
+from app.domain.services.unificar_apellidos import UnificarApellidosService
 from app.validators.apellido import validar_apellido
 from app.shared.compartir_service import ServicioCompartir
 from app.shared.email_sender import EstadoEnvio
@@ -29,7 +30,6 @@ class ApellidoView(APIView):
                 info = obtener_informacion_apellido(norm, orig)
                 resultados.append(info)
             
-            from app.domain.services.unificar_apellidos import UnificarApellidosService
             unificador = UnificarApellidosService()
             resultado_unificado = unificador.ejecutar(resultados)
             
@@ -55,11 +55,18 @@ class ApellidoView(APIView):
             )
         
         try:
-            apellido_normalizado = resultado_validacion["normalizado"]
-            info_apellido = consultar_estado_apellido(apellido_normalizado, apellido)
+            lista_apellidos = resultado_validacion["lista_apellidos"]
+            lista_originales = resultado_validacion["lista_originales"]
             
-            # Map state to HTTP status
-            estado = info_apellido.get('estado')
+            resultados = []
+            for norm, orig in zip(lista_apellidos, lista_originales):
+                info = obtener_informacion_apellido(norm, orig)
+                resultados.append(info)
+            
+            unificador = UnificarApellidosService()
+            resultado_unificado = unificador.ejecutar(resultados)
+
+            estado = resultado_unificado.get('estado')
             if estado == "encontrado":
                 http_status = status.HTTP_200_OK
             elif estado == "procesando":
@@ -69,7 +76,7 @@ class ApellidoView(APIView):
             else:
                 http_status = status.HTTP_400_BAD_REQUEST
 
-            response = DistribucionApellidoRespuestaSerializer(info_apellido)
+            response = DistribucionApellidoRespuestaSerializer(resultado_unificado)
             
             return Response(
                 response.data,

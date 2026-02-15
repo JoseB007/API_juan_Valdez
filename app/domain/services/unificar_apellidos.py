@@ -11,14 +11,40 @@ class UnificarApellidosService:
         
         if len(resultados_lista) == 1:
             return resultados_lista[0]
+        
+        estados = [r["estado"] for r in resultados_lista]
+
+        if "procesando" in estados:
+            estado_unificado = "procesando"
+        elif "no_econtrado" in estados:
+            estado_unificado = "no_econtrado"
+        elif "encontrado" in estados:
+            estado_unificado = "encontrado"
+        elif "error" in estados:
+            estado_unificado = "error"
+        else:
+            estado_unificado = resultados_lista.get("estado", "procesando")
 
         # Combinar apellidos
         apellidos_originales = " ".join([r["apellido_original"] for r in resultados_lista])
         apellidos_normalizados = " ".join([r["apellido_normalizado"] for r in resultados_lista])
 
+        if estado_unificado == "procesando":
+            return {
+                "estado": "procesando",
+                "fuente": "Unificado",
+                "apellido_original": apellidos_originales,
+                "apellido_normalizado": apellidos_normalizados,
+                "distribuciones": [],
+                "frases": []
+            }
+
         # Agrupar distribuciones por departamento
         dept_data = {}
         for res in resultados_lista:
+            if res.get("estado") == "procesando":
+                continue
+
             distribuciones = res.get("distribuciones", [])
             for dist in distribuciones:
                 if hasattr(dist, 'departamento'):
@@ -78,7 +104,7 @@ class UnificarApellidosService:
         frases_finales = self.unificar_frases(apellidos_originales, resultados_lista)
 
         return {
-            "estado": resultados_lista[0]["estado"],
+            "estado": estado_unificado if estado_unificado else resultados_lista[0]["estado"],
             "fuente": "Unificado",
             "apellido_original": apellidos_originales,
             "apellido_normalizado": apellidos_normalizados,
