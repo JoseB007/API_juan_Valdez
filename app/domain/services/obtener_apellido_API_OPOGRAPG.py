@@ -114,7 +114,7 @@ class ObtenerApellidoAPIOnograph:
         
         PARAMETROS = {
             'key': API_KEY,
-            'name': self.apellido_normalizado,
+            'name': self.apellido_original,
             'type': 'surname',
             'jurisdiction': 'co',
             # 'limit': 3
