@@ -22,12 +22,14 @@ class SolicitudCompartirSerializer(serializers.Serializer):
         return data
 
     def validate_apellido(self, value):
-        resultado = validar_apellido(value.upper())
+        resultado = validar_apellido(value)
 
         if not resultado["es_valido"]:
             raise serializers.ValidationError(resultado["error"])
         
         self.context["apellido_normalizado"] = resultado["normalizado"]
+        self.context["lista_apellidos"] = resultado["lista_apellidos"]
+        self.context["lista_originales"] = resultado["lista_originales"]
         return value
     
 

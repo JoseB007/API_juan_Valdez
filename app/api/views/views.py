@@ -93,11 +93,13 @@ class CompartirView(APIView):
             )
         
         try:
-            apellido_normalizado = serializer.context["apellido_normalizado"]
+            lista_apellidos = serializer.context["lista_apellidos"]
+            lista_originales = serializer.context["lista_originales"]
+
             canal = serializer.validated_data['canal']
             destinatario = serializer.validated_data['destinatario']
 
-            servicio = ServicioCompartir(apellido_normalizado, canal, destinatario)
+            servicio = ServicioCompartir(lista_originales, lista_apellidos, canal, destinatario)
             resultado = servicio.ejecutar()
             
             http_status = status.HTTP_202_ACCEPTED if resultado.estado == EstadoEnvio.ACEPTADO else status.HTTP_400_BAD_REQUEST

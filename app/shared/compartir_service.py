@@ -3,31 +3,46 @@ from typing import Dict
 from .generar_mensaje import GeneradorMensaje
 from .email_sender import ResultadoEnvio, EstadoEnvio
 from .tasks import tarea_compartir_email
-from ..domain.models.models import DistribucionApellidoDepartamento, Apellido
+from ..domain.models.models import DistribucionApellidoDepartamento, Apellido, Frases
+from ..domain.services.unificar_apellidos import UnificarApellidosService
 
 
 class ServicioCompartir:
-    def __init__(self, apellido: str, canal: str, destinatario: str):
-        self.apellido = apellido
+    def __init__(self, apellidos_originales: list, apellidos_normalizados: list, canal: str, destinatario: str):
+        self.apellidos_originales = apellidos_originales
+        self.apellidos_normalizados = apellidos_normalizados
         self.canal = canal
         self.destinatario = destinatario
 
-    def _obtener_apellido(self):
+    def _obtener_info_apellidos(self):
         try:
-            apellido = Apellido.objects.get(apellido=self.apellido)
-            return apellido
+            resultados = []
+            for orig, norm in zip(self.apellidos_originales, self.apellidos_normalizados):
+                apellido_obj = Apellido.objects.get(apellido=norm)
+                distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=apellido_obj)
+                frases = Frases.objects.filter(apellido=apellido_obj)
+                
+                resultados.append({
+                    "estado": "encontrado",
+                    "fuente": apellido_obj.fuente,
+                    "apellido_original": orig,
+                    "apellido_normalizado": apellido_obj.apellido,
+                    "distribuciones": list(distribuciones),
+                    "frases": list(frases)
+                })
+
+            unificador = UnificarApellidosService()
+            resultados_unificados = unificador.ejecutar(resultados)
+            
+            return resultados_unificados
         except Apellido.DoesNotExist:
             raise ValueError("Apellido no encontrado")
-        
-    def _obtener_distribuciones(self):
-        distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=self._obtener_apellido())
-        return distribuciones
 
-    def _enviar_por_canal(self, distribuciones: Dict):
+    def _enviar_por_canal(self):
         try:
-            apellido_obj = self._obtener_apellido()
+            info_apellidos = self._obtener_info_apellidos()
             generador_mensaje = GeneradorMensaje()
-            mensaje = generador_mensaje.generar(apellido_obj, distribuciones)
+            mensaje = generador_mensaje.generar(info_apellidos)
 
             if self.canal == "email":
                 try:
@@ -61,7 +76,6 @@ class ServicioCompartir:
             )
 
     def ejecutar(self):
-        distribuciones = self._obtener_distribuciones()
-        return self._enviar_por_canal(distribuciones)
+        return self._enviar_por_canal()
             
         

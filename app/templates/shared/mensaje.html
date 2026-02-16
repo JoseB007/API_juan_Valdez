@@ -70,10 +70,10 @@
     {% if distribuciones %}
         {% for distribucion in distribuciones %}
         <div class="result-card">
-            <h3>Distribución en {{ distribucion.departamento }}</h3>
+            <h3>Distribución en {{ distribucion.departamento.nombre }}</h3>
             <div class="stat-row">
                 <span class="label">Apellido:</span>
-                <span class="value">{{ distribucion.apellido }}</span>
+                <span class="value">{{ apellido }}</span>
             </div>
             <div class="stat-row">
                 <span class="label">Porcentaje:</span>
