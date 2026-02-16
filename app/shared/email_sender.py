@@ -35,8 +35,4 @@ class EnviadorCorreo:
                 mensaje="Correo enviado correctamente."
             )
         except Exception as e:
-            return ResultadoEnvio(
-                estado=EstadoEnvio.FALLIDO,
-                canal="email",
-                mensaje=f"Error de servidor al enviar el correo. {e}"
-            )
+            raise e

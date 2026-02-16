@@ -92,25 +92,19 @@ class CompartirView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        try:
-            lista_apellidos = serializer.context["lista_apellidos"]
-            lista_originales = serializer.context["lista_originales"]
+        lista_apellidos = serializer.context["lista_apellidos"]
+        lista_originales = serializer.context["lista_originales"]
 
-            canal = serializer.validated_data['canal']
-            destinatario = serializer.validated_data['destinatario']
+        canal = serializer.validated_data['canal']
+        destinatario = serializer.validated_data['destinatario']
 
-            servicio = ServicioCompartir(lista_originales, lista_apellidos, canal, destinatario)
-            resultado = servicio.ejecutar()
-            
-            http_status = status.HTTP_202_ACCEPTED if resultado.estado == EstadoEnvio.ACEPTADO else status.HTTP_400_BAD_REQUEST
-            response = RespuestaCompartirSerializer(resultado)
+        servicio = ServicioCompartir(lista_originales, lista_apellidos, canal, destinatario)
+        resultado = servicio.ejecutar()
+        
+        http_status = status.HTTP_202_ACCEPTED if resultado.estado == EstadoEnvio.ACEPTADO else status.HTTP_400_BAD_REQUEST
+        response = RespuestaCompartirSerializer(resultado)
 
-            return Response(
-                {"mensaje": response.data},
-                status=http_status
-            )
-        except Exception as e:
-            return Response(
-                {"mensaje": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        return Response(
+            {"mensaje": response.data},
+            status=http_status
+        )

@@ -29,3 +29,12 @@ class ExternalAPIError(APIException):
 
     def __init__(self, mensaje):
         self.detail = {"mensaje": mensaje}
+
+
+class BrokerConnectionError(APIException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_detail = 'El servicio de colas no está disponible temporalmente.'
+    default_code = 'error_broker_conexion'
+
+    def __init__(self, mensaje):
+        self.detail = {"mensaje": mensaje}
