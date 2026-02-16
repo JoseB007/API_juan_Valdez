@@ -45,8 +45,8 @@ class ObtenerApellidoIA:
             "fuente": apellido_obj.fuente,
             "apellido_original": self.apellido_original,
             "apellido_normalizado": apellido_obj.apellido,
-            "distribuciones": distribuciones,
-            "frases": frases
+            "distribuciones": list(distribuciones),
+            "frases": list(frases)
         }
         
     def _validar_ai_response(self, ai_response: Dict):

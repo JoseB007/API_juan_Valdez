@@ -101,8 +101,8 @@ class ObtenerApellidoAPIOnograph:
                 "fuente": apellido_obj.fuente,
                 "apellido_original": self.apellido_original,
                 "apellido_normalizado": apellido_obj.apellido,
-                "distribuciones": distribuciones_apellido,
-                "frases": frases_obj
+                "distribuciones": list(distribuciones_apellido),
+                "frases": list(frases_obj)
             }
 
     def ejecutar(self) -> Optional[Dict[str, Any]]:
