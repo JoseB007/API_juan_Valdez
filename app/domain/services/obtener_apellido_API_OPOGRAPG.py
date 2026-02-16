@@ -51,13 +51,19 @@ class ObtenerApellidoAPIOnograph:
         return generar_frases_ia(self.apellido_original, distribuciones)
     
     def generar_apellido_distribuciones(self, distribuciones: Dict[str, Any]) -> Dict[str, Any]:
-        frases = self.obtener_frases_ia(distribuciones)
-
         with transaction.atomic():
             apellido_obj, created = Apellido.objects.get_or_create(
                 apellido=self.apellido_normalizado,
                 defaults={'estado': Apellido.PENDIENTE, 'fuente': 'https://forebears.io'}
             )
+
+            # Verificar si ya existen frases para este apellido, si no es así se procede
+            # a llamar a la IA para generarlas
+            frases_existentes = Frases.objects.filter(apellido=apellido_obj).exists()
+            
+            frases = None
+            if not frases_existentes:
+                frases = self.obtener_frases_ia(distribuciones)
 
             if not created:
                 apellido_obj.fuente = 'https://forebears.io'
@@ -76,12 +82,13 @@ class ObtenerApellidoAPIOnograph:
                     }
                 )
 
-            for frase in frases['frases']:
-                Frases.objects.get_or_create(
-                    categoria=frase['categoria'],
-                    frase=frase['texto'],
-                    apellido=apellido_obj,
-                )
+            if frases and 'frases' in frases:
+                for frase in frases['frases']:
+                    Frases.objects.get_or_create(
+                        categoria=frase['categoria'],
+                        frase=frase['texto'],
+                        apellido=apellido_obj,
+                    )
 
             apellido_obj.estado = Apellido.LISTO
             apellido_obj.save()
