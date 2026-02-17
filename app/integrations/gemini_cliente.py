@@ -1,4 +1,4 @@
-import json
+import json, os
 
 from typing import Dict
 from google import genai
@@ -33,7 +33,7 @@ class GeminiIACliente:
     def ejecutar_modelo(self, prompt: str):
         try:
             response = self.cliente.models.generate_content(
-                model="gemini-2.5-flash",
+                model=os.environ.get('GEMINI_MODELO'),
                 contents=prompt,
                 config=self.config_generacion
             )

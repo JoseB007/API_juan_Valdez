@@ -38,6 +38,16 @@ class UnificarApellidosService:
                 "distribuciones": [],
                 "frases": []
             }
+        
+        if estado_unificado == "no_encontrado":
+            return {
+                "estado": "no_encontrado",
+                "fuente": "Unificado",
+                "apellido_original": apellidos_originales,
+                "apellido_normalizado": apellidos_normalizados,
+                "distribuciones": [],
+                "frases": []
+            }
 
         # Agrupar distribuciones por departamento
         dept_data = {}

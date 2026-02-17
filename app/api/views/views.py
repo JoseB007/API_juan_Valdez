@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,10 +26,15 @@ class ApellidoView(APIView):
         lista_apellidos = serializer.context["lista_apellidos"]
         lista_originales = serializer.context["lista_originales"]
         
-        resultados = []
-        for norm, orig in zip(lista_apellidos, lista_originales):
-            info = obtener_informacion_apellido(norm, orig)
-            resultados.append(info)
+        # Se utiliza ThreadPoolExecutor para ejecutar la funcion obtener_informacion_apellido en hilos separados
+        # haciendo que el tiempo de respuesta sea menor
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(obtener_informacion_apellido, norm, orig)
+                for norm, orig in zip(lista_apellidos, lista_originales)
+            ]
+        
+            resultados = [f.result() for f in futures]
         
         unificador = UnificarApellidosService()
         resultado_unificado = unificador.ejecutar(resultados)
@@ -61,7 +68,7 @@ class ApellidoView(APIView):
         
         resultados = []
         for norm, orig in zip(lista_apellidos, lista_originales):
-            info = obtener_informacion_apellido(norm, orig)
+            info = consultar_estado_apellido(norm, orig)
             resultados.append(info)
         
         unificador = UnificarApellidosService()
@@ -70,7 +77,7 @@ class ApellidoView(APIView):
         estado = resultado_unificado.get('estado')
         if estado not in ["encontrado", "procesando"]:
             return Response(
-                {"mensaje": resultado_unificado.get("mensaje", "No se encontró información")},
+                {"mensaje": resultado_unificado.get("mensaje", "No se encontró información para uno o más apellidos")},
                 status=status.HTTP_404_NOT_FOUND if estado == "no_encontrado" else status.HTTP_400_BAD_REQUEST
             )
 
