@@ -1,12 +1,10 @@
-from concurrent.futures import ThreadPoolExecutor
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from app.api.serializers.apellido_serializer import ApellidoEntradaSerializer, DistribucionApellidoRespuestaSerializer
 from app.api.serializers.compartir_serializer import SolicitudCompartirSerializer, RespuestaCompartirSerializer
-from app.domain.services.obtener_apellido import obtener_informacion_apellido, consultar_estado_apellido
+from app.domain.services.obtener_apellido import ServicioProcesarMultiplesApellidos, consultar_estado_apellido
 from app.domain.services.unificar_apellidos import UnificarApellidosService
 from app.validators.apellido import validar_apellido
 from app.shared.compartir_service import ServicioCompartir
@@ -26,18 +24,8 @@ class ApellidoView(APIView):
         lista_apellidos = serializer.context["lista_apellidos"]
         lista_originales = serializer.context["lista_originales"]
         
-        # Se utiliza ThreadPoolExecutor para ejecutar la funcion obtener_informacion_apellido en hilos separados
-        # haciendo que el tiempo de respuesta sea menor
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            futures = [
-                executor.submit(obtener_informacion_apellido, norm, orig)
-                for norm, orig in zip(lista_apellidos, lista_originales)
-            ]
-        
-            resultados = [f.result() for f in futures]
-        
-        unificador = UnificarApellidosService()
-        resultado_unificado = unificador.ejecutar(resultados)
+        procesador = ServicioProcesarMultiplesApellidos()
+        resultado_unificado = procesador.ejecutar(lista_apellidos, lista_originales)
         
         estado = resultado_unificado.get('estado')
         if estado not in ["encontrado", "procesando"]:

@@ -30,6 +30,14 @@ class GeminiIACliente:
 
         return self.ejecutar_modelo(prompt)
 
+    def obtener_frases_batch(self, apellidos_con_dist: list) -> Dict:
+        """
+        Obtiene frases para múltiples apellidos en una sola llamada.
+        apellidos_con_dist: list de dicts {"apellido": str, "distribuciones": dict}
+        """
+        prompt = self._ai_prompt_frases_batch(apellidos_con_dist)
+        return self.ejecutar_modelo(prompt)
+
     def ejecutar_modelo(self, prompt: str):
         try:
             response = self.cliente.models.generate_content(
@@ -42,7 +50,7 @@ class GeminiIACliente:
             
             return resultado
         except Exception as e:
-            raise IntegracionIAError(f"Fallo al generar contenido con IA: {str(e)}")
+            raise IntegracionIAError(f"Fallo al ejecutar el modelo de IA: {str(e)}")
         
     def _ai_prompt_apellido(self, apellido: str):
         return f"""
@@ -70,4 +78,23 @@ class GeminiIACliente:
         1. Genera 4 frases obligatorias:
             - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
             - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
+        """
+
+    def _ai_prompt_frases_batch(self, apellidos_con_dist: list):
+        items_desc = []
+        for item in apellidos_con_dist:
+            items_desc.append(f"- Apellido: {item['apellido']}, Distribuciones: {item['distribuciones']}")
+        
+        apellidos_str = "\n".join(items_desc)
+
+        return f"""
+        Analiza los siguientes apellidos y sus distribuciones por departamento en Colombia:
+        {apellidos_str}
+        
+        TAREA DE GENERACIÓN:
+        Para CADA apellido proporcionado, genera exactamente 4 frases obligatorias siguiendo estas reglas:
+        1. La primera frase: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
+        2. Las otras tres frases: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen del apellido en Colombia).
+        
+        Asegúrate de que la respuesta incluya un objeto por cada apellido en el array de resultados.
         """
