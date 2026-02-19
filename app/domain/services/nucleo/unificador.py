@@ -4,7 +4,7 @@ import statistics
 from app.utils.math import ajustar_porcentaje
 
 
-class UnificarApellidosService:
+class ServicioUnificador:
     def ejecutar(self, resultados_lista: List[Dict]) -> Dict:
         if not resultados_lista:
             return {}

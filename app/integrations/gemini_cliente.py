@@ -24,11 +24,6 @@ class GeminiIACliente:
         prompt = self._ai_prompt_apellido(apellido)
 
         return self.ejecutar_modelo(prompt)
-        
-    # def obtener_frases_apellido(self, apellido: str, dist: Dict) -> Dict:
-    #     prompt = self._ai_prompt_frases_apellido(apellido, dist)
-
-    #     return self.ejecutar_modelo(prompt)
 
     def obtener_frases_batch(self, apellidos_con_dist: list) -> Dict:
         """
@@ -69,16 +64,6 @@ class GeminiIACliente:
             - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
             - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
         """
-
-    # def _ai_prompt_frases_apellido(self, apellido: str, distribuciones: Dict):
-    #     return f"""
-    #     Analiza el término '{apellido}' y las distribuciones por departamento de ese apellido: '{distribuciones}'. 
-        
-    #     TAREA DE GENERACIÓN:
-    #     1. Genera 4 frases obligatorias:
-    #         - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
-    #         - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
-    #     """
 
     def _ai_prompt_frases_batch(self, apellidos_con_dist: list):
         items_desc = []

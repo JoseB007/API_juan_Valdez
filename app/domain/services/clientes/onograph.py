@@ -6,7 +6,7 @@ from app.utils.constantes import REGIONES, REGION_GENERICA, FRASES_GENERICAS
 from app.api.exceptions.apellido_exceptions import ExternalAPIError
 
 
-class ObtenerApellidoAPIOnograph:
+class ServicioOnograph:
     def __init__(self, apellido_normalizado: str, apellido_original: str):
         self.apellido_normalizado = apellido_normalizado
         self.apellido_original = apellido_original

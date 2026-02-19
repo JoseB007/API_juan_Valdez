@@ -5,13 +5,13 @@ from django.utils import timezone
 from django.db import transaction
 from concurrent.futures import ThreadPoolExecutor
 
-from app.domain.models.models import DistribucionApellidoDepartamento, Apellido, Frases
-from app.domain.services.obtener_apellido_IA import ObtenerApellidoIA
-from app.domain.services.obtener_apellido_API_ONOGRAPG import ObtenerApellidoAPIOnograph
-from app.domain.services.unificar_apellidos import UnificarApellidosService
-from app.domain.services.apellido_no_encontrado import apellido_no_encontrado
-from app.domain.services.generar_frases_batch import GenerarFrasesBatchService
-from app.domain.services.persistencia_apellido import PersistenciaApellidoService
+from app.domain.models.apellido_models import DistribucionApellidoDepartamento, Apellido, Frases
+from app.domain.services.clientes.generacion_ia import ServicioIA
+from app.domain.services.clientes.onograph import ServicioOnograph
+from app.domain.services.nucleo.unificador import ServicioUnificador
+from app.domain.services.casos_especiales import apellido_no_encontrado
+from app.domain.services.clientes.frases_batch import ServicioFrasesBatch
+from app.domain.services.nucleo.persistencia import ServicioPersistencia
 
 
 class ServicioProcesarMultiplesApellidos:
@@ -24,12 +24,6 @@ class ServicioProcesarMultiplesApellidos:
         4. Persiste los resultados nuevos de forma atómica.
         5. Unifica los resultados.
         """
-        # 1. Obtención de distribuciones
-        # resultados = []
-        # for norm, orig in zip(lista_apellidos, lista_originales):
-        #     info_apellido = obtener_informacion_apellido(norm, orig)
-        #     resultados.append(info_apellido)
-
         # 1. Obtención de distribuciones en paralelo
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = [
@@ -40,16 +34,16 @@ class ServicioProcesarMultiplesApellidos:
             resultados = [f.result() for f in futures]
 
         # 2. Verificar estado procesando
-        unificador = UnificarApellidosService()
+        unificador = ServicioUnificador()
         if any(r["estado"] == "procesando" for r in resultados):
            return unificador.ejecutar(resultados)
         
         # 3. Generación de frases en batch (actualiza resultados en memoria)
-        generador_frases = GenerarFrasesBatchService()
+        generador_frases = ServicioFrasesBatch()
         resultados = generador_frases.ejecutar(resultados)
 
         # 4. Persistencia de resultados nuevos
-        persistencia = PersistenciaApellidoService()
+        persistencia = ServicioPersistencia()
         for res in resultados:
             if res.get("nuevo"):
                 persistencia.guardar_resultado_completo(res)
@@ -82,7 +76,7 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
                     "frases": list(frases)
                 }
             
-            # Verificamos si el proceso está "atascado" (más de 5 minutos en PENDIENTE)
+            # Verificamos si el proceso está "atascado" (más de 1 minuto en PENDIENTE)
             esta_caducado = (timezone.now() - apellido_obj.created_at) > timedelta(minutes=1)
             
             if apellido_obj.estado == Apellido.PENDIENTE and not esta_caducado:
@@ -103,7 +97,7 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
 
     try:
         # Intento con Onograph (Retorna datos en memoria)
-        servicio = ObtenerApellidoAPIOnograph(apellido_normalizado, apellido_original)
+        servicio = ServicioOnograph(apellido_normalizado, apellido_original)
         resultado = servicio.ejecutar()
 
         if resultado.get('estado') == "encontrado":
@@ -111,7 +105,7 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
 
         # Si no se encuentra, se recurre a la IA
         if resultado.get('estado') == "no_encontrado":
-            servicio_ia = ObtenerApellidoIA(apellido_normalizado, apellido_original)
+            servicio_ia = ServicioIA(apellido_normalizado, apellido_original)
             return servicio_ia.ejecutar()
 
         return resultado

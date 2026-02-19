@@ -3,8 +3,8 @@ from typing import Dict
 from .generar_mensaje import GeneradorMensaje
 from .email_sender import ResultadoEnvio, EstadoEnvio
 from .tasks import tarea_compartir_email
-from ..domain.models.models import DistribucionApellidoDepartamento, Apellido, Frases
-from ..domain.services.unificar_apellidos import UnificarApellidosService
+from app.domain.models.apellido_models import DistribucionApellidoDepartamento, Apellido, Frases
+from app.domain.services.nucleo.unificador import ServicioUnificador
 from app.api.exceptions.apellido_exceptions import BrokerConnectionError
 
 
@@ -32,7 +32,7 @@ class ServicioCompartir:
                     "frases": list(frases)
                 })
 
-            unificador = UnificarApellidosService()
+            unificador = ServicioUnificador()
             resultados_unificados = unificador.ejecutar(resultados)
             
             return resultados_unificados

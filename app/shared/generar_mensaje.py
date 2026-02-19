@@ -2,7 +2,7 @@ from typing import Dict
 from django.template.loader import render_to_string
 from dataclasses import dataclass
 
-from ..domain.models.models import Frases
+from ..domain.models.apellido_models import Frases
 
 
 @dataclass

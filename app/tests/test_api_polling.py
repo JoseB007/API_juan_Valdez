@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from app.domain.models.models import Apellido, Departamento, DistribucionApellidoDepartamento, Frases
+from app.domain.models.apellido_models import Apellido, Departamento, DistribucionApellidoDepartamento, Frases
 
 @pytest.mark.django_db
 class TestApellidoPolling:

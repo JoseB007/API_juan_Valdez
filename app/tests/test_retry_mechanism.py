@@ -1,14 +1,14 @@
 import pytest
 from django.utils import timezone
 from datetime import timedelta
-from app.domain.models.models import Apellido
-from app.domain.services.obtener_apellido import obtener_informacion_apellido
+from app.domain.models.apellido_models import Apellido
+from app.domain.services.nucleo.procesador import obtener_informacion_apellido
 from unittest.mock import patch
 
 @pytest.mark.django_db
 class TestRetryMechanism:
     
-    @patch('app.domain.services.obtener_apellido.ObtenerApellidoAPIOnograph')
+    @patch('app.domain.services.nucleo.procesador.ServicioOnograph')
     def test_reprocesar_apellido_stale(self, mock_api):
         # 1. Crear un apellido PENDIENTE antiguo (hace 10 minutos)
         hace_10_mins = timezone.now() - timedelta(minutes=10)
@@ -30,7 +30,7 @@ class TestRetryMechanism:
         assert mock_api.called
         assert resultado == {"estado": "encontrado"}
 
-    @patch('app.domain.services.obtener_apellido.ObtenerApellidoAPIOnograph')
+    @patch('app.domain.services.nucleo.procesador.ServicioOnograph')
     def test_no_reprocesar_apellido_reciente(self, mock_api):
         # 1. Crear un apellido PENDIENTE reciente (hace 1 minuto)
         hace_1_min = timezone.now() - timedelta(minutes=1)

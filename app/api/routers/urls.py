@@ -1,6 +1,7 @@
 from django.urls import path
 
-from app.api.views.views import ApellidoView, CompartirView
+from app.api.views.apellido_views import ApellidoView
+from app.api.views.compartir_views import CompartirView
 
 
 urlpatterns = [

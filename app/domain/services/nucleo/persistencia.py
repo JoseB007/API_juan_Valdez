@@ -1,9 +1,9 @@
 from django.db import transaction
 from typing import List, Dict
-from app.domain.models.models import Apellido, Departamento, DistribucionApellidoDepartamento, Frases
+from app.domain.models.apellido_models import Apellido, Departamento, DistribucionApellidoDepartamento, Frases
 
 
-class PersistenciaApellidoService:
+class ServicioPersistencia:
     @transaction.atomic
     def guardar_resultado_completo(self, resultado: Dict):
         """
@@ -48,8 +48,6 @@ class PersistenciaApellidoService:
                     frase=f_data["frase"],
                     apellido=apellido_obj
                 )
-            # Si f_data fuera un objeto Frases, ya estaría asociado o se ignoraría aquí 
-            # ya que el flujo de persistencia se encarga de crear nuevos registros.
 
         # 3. Finalizar estado
         apellido_obj.estado = Apellido.LISTO

@@ -1,8 +1,8 @@
 import pytest
-from app.domain.services.unificar_apellidos import UnificarApellidosService
+from app.domain.services.nucleo.unificador import ServicioUnificador
 
 def test_unificar_estado_mixto_uno_pendiente():
-    service = UnificarApellidosService()
+    service = ServicioUnificador()
     
     resultados = [
         {
@@ -28,7 +28,7 @@ def test_unificar_estado_mixto_uno_pendiente():
     assert "Perez Gomez" in resultado_final["apellido_original"]
 
 def test_unificar_ambos_encontrados():
-    service = UnificarApellidosService()
+    service = ServicioUnificador()
     
     resultados = [
         {

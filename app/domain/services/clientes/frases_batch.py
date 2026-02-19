@@ -3,7 +3,7 @@ from typing import List, Dict
 from app.integrations.ai_cliente import generar_frases_batch_ia
 
 
-class GenerarFrasesBatchService:
+class ServicioFrasesBatch:
     def ejecutar(self, resultados: List[Dict]) -> List[Dict]:
         """
         Recibe una lista de resultados de apellidos y genera frases en batch
