@@ -4,7 +4,7 @@ import statistics
 from app.utils.math import ajustar_porcentaje
 
 
-class UnificarApellidosService:
+class ServicioUnificador:
     def ejecutar(self, resultados_lista: List[Dict]) -> Dict:
         if not resultados_lista:
             return {}
@@ -23,7 +23,7 @@ class UnificarApellidosService:
         elif "error" in estados:
             estado_unificado = "error"
         else:
-            estado_unificado = resultados_lista.get("estado", "procesando")
+            estado_unificado = "procesando"
 
         # Combinar apellidos
         apellidos_originales = " ".join([r["apellido_original"] for r in resultados_lista])
@@ -32,16 +32,6 @@ class UnificarApellidosService:
         if estado_unificado == "procesando":
             return {
                 "estado": "procesando",
-                "fuente": "Unificado",
-                "apellido_original": apellidos_originales,
-                "apellido_normalizado": apellidos_normalizados,
-                "distribuciones": [],
-                "frases": []
-            }
-        
-        if estado_unificado == "no_encontrado":
-            return {
-                "estado": "no_encontrado",
                 "fuente": "Unificado",
                 "apellido_original": apellidos_originales,
                 "apellido_normalizado": apellidos_normalizados,

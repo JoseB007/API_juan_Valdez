@@ -2,7 +2,7 @@ from typing import Dict
 from jsonschema import validate, ValidationError
 from django.db import transaction
 
-from app.domain.models.models import (
+from app.domain.models.apellido_models import (
     Apellido,
     Departamento,
     DistribucionApellidoDepartamento,
@@ -11,13 +11,12 @@ from app.domain.models.models import (
 
 from app.integrations.ai_cliente import generar_apellido_ia
 from app.schemas.ai_apellido_distro_schema import AI_APELLIDO_DISTRO_SCHEMA
-from app.domain.services.apellido_no_encontrado import apellido_no_encontrado
-from app.domain.services.apellido_extranjero import apellido_extranjero
+from app.domain.services.casos_especiales import apellido_extranjero
 from app.api.exceptions.apellido_exceptions import ApellidoInvalidoError
 from app.utils.constantes import REGIONES
 
 
-class ObtenerApellidoIA:
+class ServicioIA:
     def __init__(self, apellido_normalizado: str, apellido_original: str):
         self.apellido_normalizado = apellido_normalizado
         self.apellido_original = apellido_original
@@ -33,7 +32,7 @@ class ObtenerApellidoIA:
             )
         
         if ai_response['es_apellido_extranjero']:
-            return apellido_extranjero()
+            return apellido_extranjero(self.apellido_original, self.apellido_normalizado)
 
         apellido_obj = self._crear_apellido(ai_response)
 
@@ -97,4 +96,3 @@ class ObtenerApellidoIA:
         if apellido_obj:
             apellido_obj.estado = Apellido.FALLIDO
             apellido_obj.save()
-        

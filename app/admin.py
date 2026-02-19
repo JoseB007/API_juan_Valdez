@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app.domain.models.models import(
+from app.domain.models.apellido_models import(
     Apellido,
     Departamento,
     DistribucionApellidoDepartamento,

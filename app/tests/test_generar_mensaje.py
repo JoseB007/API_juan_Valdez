@@ -1,6 +1,6 @@
 from django.test import TestCase
 from app.shared.generar_mensaje import GeneradorMensaje
-from app.domain.models.models import DistribucionApellidoDepartamento, Apellido, Frases
+from app.domain.models.apellido_models import DistribucionApellidoDepartamento, Apellido, Frases
 from typing import Dict
 from unittest.mock import MagicMock
 

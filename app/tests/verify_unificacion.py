@@ -1,7 +1,7 @@
-from app.domain.services.unificar_apellidos import UnificarApellidosService
+from app.domain.services.nucleo.unificador import ServicioUnificador
 
 def test_unificar_apellidos_v3():
-    service = UnificarApellidosService()
+    service = ServicioUnificador()
     
     resultados_lista = [
         {
