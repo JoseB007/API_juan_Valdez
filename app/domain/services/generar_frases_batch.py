@@ -1,5 +1,4 @@
 from typing import List, Dict
-from django.db import transaction
 
 from app.integrations.ai_cliente import generar_frases_batch_ia
 

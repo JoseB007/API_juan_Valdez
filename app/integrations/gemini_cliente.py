@@ -25,10 +25,10 @@ class GeminiIACliente:
 
         return self.ejecutar_modelo(prompt)
         
-    def obtener_frases_apellido(self, apellido: str, dist: Dict) -> Dict:
-        prompt = self._ai_prompt_frases_apellido(apellido, dist)
+    # def obtener_frases_apellido(self, apellido: str, dist: Dict) -> Dict:
+    #     prompt = self._ai_prompt_frases_apellido(apellido, dist)
 
-        return self.ejecutar_modelo(prompt)
+    #     return self.ejecutar_modelo(prompt)
 
     def obtener_frases_batch(self, apellidos_con_dist: list) -> Dict:
         """
@@ -70,15 +70,15 @@ class GeminiIACliente:
             - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
         """
 
-    def _ai_prompt_frases_apellido(self, apellido: str, distribuciones: Dict):
-        return f"""
-        Analiza el término '{apellido}' y las distribuciones por departamento de ese apellido: '{distribuciones}'. 
+    # def _ai_prompt_frases_apellido(self, apellido: str, distribuciones: Dict):
+    #     return f"""
+    #     Analiza el término '{apellido}' y las distribuciones por departamento de ese apellido: '{distribuciones}'. 
         
-        TAREA DE GENERACIÓN:
-        1. Genera 4 frases obligatorias:
-            - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
-            - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
-        """
+    #     TAREA DE GENERACIÓN:
+    #     1. Genera 4 frases obligatorias:
+    #         - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
+    #         - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
+    #     """
 
     def _ai_prompt_frases_batch(self, apellidos_con_dist: list):
         items_desc = []
@@ -94,7 +94,7 @@ class GeminiIACliente:
         TAREA DE GENERACIÓN:
         Para CADA apellido proporcionado, genera exactamente 4 frases obligatorias siguiendo estas reglas:
         1. La primera frase: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
-        2. Las otras tres frases: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen del apellido en Colombia).
+        2. Las otras tres frases: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen del apellido en Colombia). Asegura que esta frase contenga siempre el apellido.
         
         Asegúrate de que la respuesta incluya un objeto por cada apellido en el array de resultados.
         """

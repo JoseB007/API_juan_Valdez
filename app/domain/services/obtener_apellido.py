@@ -25,18 +25,19 @@ class ServicioProcesarMultiplesApellidos:
         5. Unifica los resultados.
         """
         # 1. Obtención de distribuciones
-        resultados = []
-        for norm, orig in zip(lista_apellidos, lista_originales):
-            info_apellido = obtener_informacion_apellido(norm, orig)
-            resultados.append(info_apellido)
+        # resultados = []
+        # for norm, orig in zip(lista_apellidos, lista_originales):
+        #     info_apellido = obtener_informacion_apellido(norm, orig)
+        #     resultados.append(info_apellido)
 
-        # with ThreadPoolExecutor(max_workers=2) as executor:
-        #     futures = [
-        #         executor.submit(obtener_informacion_apellido, norm, orig)
-        #         for norm, orig in zip(lista_apellidos, lista_originales)
-        #     ]
+        # 1. Obtención de distribuciones en paralelo
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(obtener_informacion_apellido, norm, orig)
+                for norm, orig in zip(lista_apellidos, lista_originales)
+            ]
 
-        #     resultados = [f.result() for f in futures]
+            resultados = [f.result() for f in futures]
 
         # 2. Verificar estado procesando
         unificador = UnificarApellidosService()
@@ -108,7 +109,7 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
         if resultado.get('estado') == "encontrado":
             return resultado
 
-        # Si no se encuentra, se recurre a la IA (que actualmente guarda en DB, se mantendrá así por ahora)
+        # Si no se encuentra, se recurre a la IA
         if resultado.get('estado') == "no_encontrado":
             servicio_ia = ObtenerApellidoIA(apellido_normalizado, apellido_original)
             return servicio_ia.ejecutar()
@@ -153,8 +154,7 @@ def consultar_estado_apellido(apellido_normalizado: str, apellido_original: str)
             "apellido_normalizado": apellido_normalizado,
             "distribuciones": [],
             "frases": [],
-            "mensaje": "El procesamiento del apellido falló."
         }
         
     except Apellido.DoesNotExist:
-        return apellido_no_encontrado()
+        return apellido_no_encontrado(apellido_original, apellido_normalizado)

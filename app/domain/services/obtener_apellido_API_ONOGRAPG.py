@@ -2,7 +2,7 @@ import requests, os
 from typing import Dict, Optional, Any
 
 from app.utils.math import ajustar_porcentaje
-from app.utils.constantes import REGIONES
+from app.utils.constantes import REGIONES, REGION_GENERICA, FRASES_GENERICAS
 from app.api.exceptions.apellido_exceptions import ExternalAPIError
 
 
@@ -76,16 +76,23 @@ class ObtenerApellidoAPIOnograph:
             if len(distribuciones) == 3:
                 break
         
-        total_incidencia = sum(d['incidencia'] for d in distribuciones)
-        if total_incidencia > 0:
-            for d in distribuciones:
-                d['porcentaje'] = round((d['incidencia'] * 100) / total_incidencia)
+        frases = []
+
+        # Si no hay distribuciones en las regiones definidas, aplicamos fallback genérico
+        if not distribuciones:
+            distribuciones = REGION_GENERICA
+            frases = FRASES_GENERICAS
         else:
-            for d in distribuciones:
-                d['porcentaje'] = 0
-        
-        # Ajustar porcentajes para que sumen 100%
-        distribuciones = ajustar_porcentaje(distribuciones)
+            total_incidencia = sum(d['incidencia'] for d in distribuciones)
+            if total_incidencia > 0:
+                for d in distribuciones:
+                    d['porcentaje'] = round((d['incidencia'] * 100) / total_incidencia)
+            else:
+                for d in distribuciones:
+                    d['porcentaje'] = 0
+            
+            # Ajustar porcentajes para que sumen 100%
+            distribuciones = ajustar_porcentaje(distribuciones)
 
         return {
             "estado": "encontrado",
@@ -93,6 +100,6 @@ class ObtenerApellidoAPIOnograph:
             "apellido_original": self.apellido_original,
             "apellido_normalizado": self.apellido_normalizado,
             "distribuciones": distribuciones,
-            "frases": [],
+            "frases": frases,
             "nuevo": True # Flag para indicar que necesita persistencia
         }
