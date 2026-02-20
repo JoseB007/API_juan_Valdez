@@ -1,15 +1,7 @@
 from typing import Dict
 from django.template.loader import render_to_string
-from dataclasses import dataclass
 
-from ..domain.models.apellido_models import Frases
-
-
-@dataclass
-class Mensaje:
-    asunto: str
-    cuerpo: str
-    cuerpo_html: str = None
+from .entidades import Mensaje
 
 
 class GeneradorMensaje:

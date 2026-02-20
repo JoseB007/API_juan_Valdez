@@ -183,3 +183,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "America/Bogota"
 CELERY_ENABLE_UTC = True
+
+
+# WhatsApp Configuration
+WHATSAPP_PROVIDER = os.environ.get('WHATSAPP_PROVIDER')
