@@ -20,7 +20,8 @@ class MetaAdaptador(WhatsappAdaptador):
         phone_number_id = os.environ.get('META_PHONE_NUMBER_ID')
         
         # URL de Meta Graph API
-        url = f'https://graph.facebook.com/v21.0/{phone_number_id}/messages'
+        url_base = os.environ.get('META_API_URL', 'https://graph.facebook.com/v21.0')
+        url = f'{url_base}/{phone_number_id}/messages'
 
         headers = {
             "Authorization": f"Bearer {access_token}",
@@ -58,14 +59,14 @@ class MetaAdaptador(WhatsappAdaptador):
             logger.error(f"Error de red con Meta: {str(e)}")
             raise WhatsappError(f"Error de conexión con Meta: {str(e)}")
         except (KeyError, IndexError) as e:
-            logger.error(f"Respuesta inesperada de Meta: {response.text}")
+            logger.error(f"Respuesta inesperada de Meta. Error: {str(e)}")
             raise WhatsappProviderError(f"Respuesta inesperada del proveedor: {str(e)}")
 
     def _manejar_error_http(self, response: requests.Response):
         """Mapea errores HTTP de Meta a excepciones personalizadas."""
         status_code = response.status_code
         error_data = response.json().get('error', {})
-        mensaje_error = error_data.get('message', response.text)
+        mensaje_error = error_data.get('message', 'Sin mensaje de error detallado')
         
         logger.error(f"Error de Meta API ({status_code}): {mensaje_error}")
 

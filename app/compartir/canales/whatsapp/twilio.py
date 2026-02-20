@@ -20,7 +20,9 @@ class TwilioAdaptador(WhatsappAdaptador):
         auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
         whatsapp_number = os.environ.get('TWILIO_WHATSAPP_NUMBER')
 
-        url = f'https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json'
+        # URL de Twilio API
+        url_base = os.environ.get('TWILIO_API_URL', 'https://api.twilio.com/2010-04-01')
+        url = f'{url_base}/Accounts/{account_sid}/Messages.json'
 
         data = {
             "From": whatsapp_number,
@@ -48,7 +50,7 @@ class TwilioAdaptador(WhatsappAdaptador):
             logger.error(f"Error de red con Twilio: {str(e)}")
             raise WhatsappError(f"Error de conexión con Twilio: {str(e)}")
         except (KeyError, ValueError) as e:
-            logger.error(f"Respuesta inesperada de Twilio: {response.text}")
+            logger.error(f"Respuesta inesperada de Twilio. Error: {str(e)}")
             raise WhatsappProviderError(f"Respuesta inesperada del proveedor: {str(e)}")
 
     def _manejar_error_http(self, response: requests.Response):
@@ -56,9 +58,9 @@ class TwilioAdaptador(WhatsappAdaptador):
         status_code = response.status_code
         try:
             error_data = response.json()
-            mensaje_error = f"{error_data.get('message', response.text)} (Code: {error_data.get('code')})"
+            mensaje_error = f"{error_data.get('message', 'Sin mensaje de error')} (Code: {error_data.get('code')})"
         except Exception:
-            mensaje_error = response.text
+            mensaje_error = "Error no estructurado del proveedor"
 
         logger.error(f"Error de Twilio API ({status_code}): {mensaje_error}")
 
