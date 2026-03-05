@@ -1,85 +1,29 @@
-import json, os
+import json
 
-from typing import Dict
 from google import genai
 
-from app.utils.constantes import REGIONES
-from app.api.exceptions.apellido_exceptions import IntegracionIAError
+from.adaptadorIA import AdaptadorIA
+from .utils import SYSTEM_INSTRUCTION
 
 
-class GeminiIACliente:
-    def __init__(self, schema: Dict):
-        try:
-            self.cliente = genai.Client()
-        except ValueError as e:
-            raise IntegracionIAError(f"Error de configuración de la IA: {str(e)}")
-        
+class GeminiIACliente(AdaptadorIA):
+    def __init__(self, api_key, modelo, schema):
         self.config_generacion = {
             "response_mime_type": "application/json",
             "response_schema": schema,
             "temperature": 0.1,
+            "system_instruction": SYSTEM_INSTRUCTION
         }
+        super().__init__(api_key, modelo, schema)
 
-    def obtener_apellido_distribuciones(self, apellido: str) -> Dict:
-        prompt = self._ai_prompt_apellido(apellido)
+    def _configurar_cliente(self) -> genai:
+        return genai.Client(api_key=self.api_key)
 
-        return self.ejecutar_modelo(prompt)
+    def _ejecutar_modelo(self, prompt: str):
+        response = self.cliente.models.generate_content(
+            model=self.modelo,
+            contents=prompt,
+            config=self.config_generacion
+        )
 
-    def obtener_frases_batch(self, apellidos_con_dist: list) -> Dict:
-        """
-        Obtiene frases para múltiples apellidos en una sola llamada.
-        apellidos_con_dist: list de dicts {"apellido": str, "distribuciones": dict}
-        """
-        prompt = self._ai_prompt_frases_batch(apellidos_con_dist)
-        return self.ejecutar_modelo(prompt)
-
-    def ejecutar_modelo(self, prompt: str):
-        try:
-            response = self.cliente.models.generate_content(
-                model=os.environ.get('GEMINI_MODELO'),
-                contents=prompt,
-                config=self.config_generacion
-            )
-
-            resultado = json.loads(response.text)
-            
-            return resultado
-        except Exception as e:
-            raise IntegracionIAError(f"Fallo al ejecutar el modelo de IA: {str(e)}")
-        
-    def _ai_prompt_apellido(self, apellido: str):
-        return f"""
-        Analiza el término '{apellido}'. 
-
-        TAREA DE VALIDACIÓN:
-        - Si el término es texto aleatorio (ej. 'asdfg'), una combinación sin sentido de letras, o un insulto, establece 'es_apellido_real' en false y deja los arrays de 'distribuciones' y 'frases' vacíos.
-        - Si el término es un apellido extranjero (ej. 'Smith', 'Johnson', 'Williams', 'Brown', 'Jones'), establece 'es_apellido_extranjero' en true y deja los arrays de 'distribuciones' y 'frases' vacíos.
-        
-        
-        TAREA DE GENERACIÓN (Solo si 'es_apellido_real' es true):
-        1. Genera estadísticas demográficas para el apellido '{apellido}' en Colombia, teniendo en cuenta únicamente las regiones a continuación: {REGIONES}.
-        2. Dentro de las distribuciones demográficas, asegura que la suma total entre los porcentajes sea del 100%. Asigna a cada distribución el porcentaje más indicado, por ej. 50, 25, 25%
-        3. Intenta generar el ranking de cada distribución de forma aleatoria entre 1 y 100, y no que las distribuciones sean, por ej. ranking 1, 2 y 3.
-        3. Genera 4 frases obligatorias:
-            - La primera: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
-            - Las otras tres: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen).
-        """
-
-    def _ai_prompt_frases_batch(self, apellidos_con_dist: list):
-        items_desc = []
-        for item in apellidos_con_dist:
-            items_desc.append(f"- Apellido: {item['apellido']}, Distribuciones: {item['distribuciones']}")
-        
-        apellidos_str = "\n".join(items_desc)
-
-        return f"""
-        Analiza los siguientes apellidos y sus distribuciones por departamento en Colombia:
-        {apellidos_str}
-        
-        TAREA DE GENERACIÓN:
-        Para CADA apellido proporcionado, genera exactamente 4 frases obligatorias siguiendo estas reglas:
-        1. La primera frase: Categoría 'PERSONALIDAD' (relacionada con el ímpetu o historia del apellido).
-        2. Las otras tres frases: Categoría 'SABORES' (metáforas gastronómicas sobre el café, derivados y relacionados propios de la región de origen del apellido en Colombia). Asegura que esta frase contenga siempre el apellido.
-        
-        Asegúrate de que la respuesta incluya un objeto por cada apellido en el array de resultados.
-        """
+        return json.loads(response.text)

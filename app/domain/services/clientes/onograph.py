@@ -35,11 +35,8 @@ class ServicioOnograph:
         except Exception as e:
             raise ExternalAPIError(f"Error inesperado al conectar con la API: {str(e)}")
 
-    def ejecutar(self) -> Optional[Dict[str, Any]]:
-        """
-        Ejecuta la petición a la API de Onograph y retorna los datos en memoria.
-        """
-        URL = 'https://ono.4b.rs/v1/jur'
+    def _preparar_parametros(self) -> tuple[str, Dict[str, Any]]:
+        URL = os.environ.get('URL_ONOGRAPH')
         API_KEY = os.environ.get('API_KEY_ONOGRAPH')
         
         PARAMETROS = {
@@ -48,17 +45,9 @@ class ServicioOnograph:
             'type': 'surname',
             'jurisdiction': 'co',
         }
+        return URL, PARAMETROS
 
-        response = self._peticion_api(URL, PARAMETROS)
-
-        # Validamos que la respuesta contenga datos
-        if 'jurisdictions' not in response:
-            return {
-                "estado": "no_encontrado",
-                "mensaje": "No se pudo obtener datos de la API"
-            }
-        
-        # Construimos la lista de distribuciones si la respuesta es exitosa
+    def _procesar_jurisdicciones(self, response: Dict[str, Any]) -> list[Dict[str, Any]]:
         distribuciones = []
         for depart in response.get('jurisdictions', []):
             nombre_depart_api = depart.get('jurisdiction').split(" Department")[0].strip()
@@ -75,6 +64,36 @@ class ServicioOnograph:
 
             if len(distribuciones) == 3:
                 break
+        return distribuciones
+
+    def _aplicar_estadisticas(self, distribuciones: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
+        total_incidencia = sum(d['incidencia'] for d in distribuciones)
+        if total_incidencia > 0:
+            for d in distribuciones:
+                d['porcentaje'] = round((d['incidencia'] * 100) / total_incidencia)
+        else:
+            for d in distribuciones:
+                d['porcentaje'] = 0
+        
+        # Ajustar porcentajes para que sumen 100%
+        return ajustar_porcentaje(distribuciones)
+
+    def ejecutar(self) -> Optional[Dict[str, Any]]:
+        """
+        Ejecuta la petición a la API de Onograph y retorna los datos en memoria.
+        """
+        URL, PARAMETROS = self._preparar_parametros()
+        response = self._peticion_api(URL, PARAMETROS)
+
+        # Validamos que la respuesta contenga datos
+        if 'jurisdictions' not in response:
+            return {
+                "estado": "no_encontrado",
+                "mensaje": "No se pudo obtener datos de la API"
+            }
+        
+        # Construimos la lista de distribuciones si la respuesta es exitosa
+        distribuciones = self._procesar_jurisdicciones(response)
         
         frases = []
 
@@ -83,16 +102,7 @@ class ServicioOnograph:
             distribuciones = REGION_GENERICA
             frases = FRASES_GENERICAS
         else:
-            total_incidencia = sum(d['incidencia'] for d in distribuciones)
-            if total_incidencia > 0:
-                for d in distribuciones:
-                    d['porcentaje'] = round((d['incidencia'] * 100) / total_incidencia)
-            else:
-                for d in distribuciones:
-                    d['porcentaje'] = 0
-            
-            # Ajustar porcentajes para que sumen 100%
-            distribuciones = ajustar_porcentaje(distribuciones)
+            distribuciones = self._aplicar_estadisticas(distribuciones)
 
         return {
             "estado": "encontrado",

@@ -40,14 +40,19 @@ class ServicioPersistencia:
 
         # 2. Guardar Frases
         frases_data = resultado.get("frases", [])
-        for f_data in frases_data:
-            # Las frases pueden venir de la IA (dict) o ya existir (objetos)
-            if isinstance(f_data, dict):
-                Frases.objects.get_or_create(
-                    categoria=f_data["categoria"],
-                    frase=f_data["frase"],
-                    apellido=apellido_obj
-                )
+        if frases_data:
+            # Limpiamos frases anteriores para este apellido para permitir
+            # que la IA guarde múltiples frases por categoría sin duplicados infinitos.
+            Frases.objects.filter(apellido=apellido_obj).delete()
+
+            for f_data in frases_data:
+                # Las frases pueden venir de la IA (dict) o ya existir (objetos)
+                if isinstance(f_data, dict):
+                    Frases.objects.create(
+                        categoria=f_data["categoria"],
+                        frase=f_data["frase"],
+                        apellido=apellido_obj
+                    )
 
         # 3. Finalizar estado
         apellido_obj.estado = Apellido.LISTO

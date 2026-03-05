@@ -1,19 +1,6 @@
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
-from enum import Enum
-from dataclasses import dataclass
-
-
-class EstadoEnvio(Enum):
-    ACEPTADO = "ACEPTADO"
-    FALLIDO = "FALLIDO"
-
-
-@dataclass
-class ResultadoEnvio:
-    estado: EstadoEnvio
-    canal: str
-    mensaje: str
+from ..entidades import ResultadoEnvio, EstadoEnvio
 
 
 class EnviadorCorreo:

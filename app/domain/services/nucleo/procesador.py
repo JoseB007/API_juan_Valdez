@@ -1,8 +1,5 @@
 import time
 from typing import List, Dict
-from datetime import timedelta
-from django.utils import timezone
-from django.db import transaction
 from concurrent.futures import ThreadPoolExecutor
 
 from app.domain.models.apellido_models import DistribucionApellidoDepartamento, Apellido, Frases
@@ -12,6 +9,7 @@ from app.domain.services.nucleo.unificador import ServicioUnificador
 from app.domain.services.casos_especiales import apellido_no_encontrado
 from app.domain.services.clientes.frases_batch import ServicioFrasesBatch
 from app.domain.services.nucleo.persistencia import ServicioPersistencia
+from app.domain.services.nucleo.soporte import ApellidoRepository, ApellidoPolicy
 
 
 class ServicioProcesarMultiplesApellidos:
@@ -53,50 +51,41 @@ class ServicioProcesarMultiplesApellidos:
 
 
 def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: str) -> Dict:
-    with transaction.atomic():
-        apellido_obj, created = Apellido.objects.get_or_create(
-            apellido=apellido_normalizado,
-            defaults={'estado': Apellido.PENDIENTE, 'fuente': 'Buscando...'}
-        )
+    # 1. Obtencion/Creacion inicial con bloqueo
+    apellido_obj, created = ApellidoRepository.obtener_o_crear_inicial(apellido_normalizado)
 
-        # Bloqueamos el registro para evitar que otros procesos lo modifiquen simultáneamente
-        apellido_obj = Apellido.objects.select_for_update().get(pk=apellido_obj.pk)
+    # 2. Verificar si ya se esta procesando activamente (solo si no es nuevo)
+    if not created and ApellidoPolicy.esta_procesando(apellido_obj):
+        return {
+            "estado": "procesando",
+            "fuente": "",
+            "apellido_original": apellido_original,
+            "apellido_normalizado": apellido_normalizado,
+            "distribuciones": [],
+            "frases": []
+        }
 
-        if not created:
-            if apellido_obj.estado == Apellido.LISTO:
-                distribuciones = DistribucionApellidoDepartamento.objects.filter(apellido=apellido_obj)
-                frases = Frases.objects.filter(apellido=apellido_obj)
+    # 3. Cargar datos existentes y verificar completitud
+    datos_db = ApellidoRepository.obtener_datos_completos(apellido_obj)
+    
+    if datos_db["tiene_distribuciones"]:
+        if datos_db["tiene_frases"]:
+            ApellidoRepository.marcar_como_listo(apellido_obj)
+        
+        return {
+            "estado": "encontrado",
+            "fuente": apellido_obj.fuente or "Cargado de DB",
+            "apellido_original": apellido_original,
+            "apellido_normalizado": apellido_obj.apellido,
+            "distribuciones": datos_db["distribuciones"],
+            "frases": datos_db["frases"]
+        }
 
-                return {
-                    "estado": "encontrado",
-                    "fuente": apellido_obj.fuente,
-                    "apellido_original": apellido_original,
-                    "apellido_normalizado": apellido_obj.apellido,
-                    "distribuciones": list(distribuciones),
-                    "frases": list(frases)
-                }
-            
-            # Verificamos si el proceso está "atascado" (más de 1 minuto en PENDIENTE)
-            esta_caducado = (timezone.now() - apellido_obj.created_at) > timedelta(minutes=1)
-            
-            if apellido_obj.estado == Apellido.PENDIENTE and not esta_caducado:
-                return {
-                    "estado": "procesando",
-                    "fuente": "",
-                    "apellido_original": apellido_original,
-                    "apellido_normalizado": apellido_normalizado,
-                    "distribuciones": [],
-                    "frases": []
-                }
-            
-            # Reiniciar si falló o caducó
-            Apellido.objects.filter(pk=apellido_obj.pk).update(
-                estado=Apellido.PENDIENTE, 
-                created_at=timezone.now()
-            )
-
+    # 4. Si no hay datos, reiniciar estado e intentar servicios externos
+    ApellidoRepository.reiniciar_estado_pendiente(apellido_obj)
+    
     try:
-        # Intento con Onograph (Retorna datos en memoria)
+        # Intento con Onograph
         servicio = ServicioOnograph(apellido_normalizado, apellido_original)
         resultado = servicio.ejecutar()
 
@@ -110,7 +99,7 @@ def obtener_informacion_apellido(apellido_normalizado: str, apellido_original: s
 
         return resultado
     except Exception as e:
-        Apellido.objects.filter(apellido=apellido_normalizado).update(estado=Apellido.FALLIDO)
+        ApellidoRepository.marcar_como_fallido(apellido_normalizado)
         raise e
 
 

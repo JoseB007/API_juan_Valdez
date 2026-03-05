@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from app.api.serializers.compartir_serializer import SolicitudCompartirSerializer, RespuestaCompartirSerializer
-from app.shared.compartir_service import ServicioCompartir
-from app.shared.email_sender import EstadoEnvio
+from app.compartir.servicio import ServicioCompartir
+from app.compartir.entidades import EstadoEnvio
 
 
 class CompartirView(APIView):

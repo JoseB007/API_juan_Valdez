@@ -1,8 +1,6 @@
-from typing import Dict
-
-from .generar_mensaje import GeneradorMensaje
-from .email_sender import ResultadoEnvio, EstadoEnvio
-from .tasks import tarea_compartir_email
+from .generador import GeneradorMensaje
+from .entidades import ResultadoEnvio, EstadoEnvio
+from .tasks import tarea_compartir_email, tarea_compartir_whatsapp
 from app.domain.models.apellido_models import DistribucionApellidoDepartamento, Apellido, Frases
 from app.domain.services.nucleo.unificador import ServicioUnificador
 from app.api.exceptions.apellido_exceptions import BrokerConnectionError
@@ -61,6 +59,20 @@ class ServicioCompartir:
                 except Exception as e:
                     # Si falla al encolar, es un error de infraestructura (Broker Redis)
                     raise BrokerConnectionError(f"No se pudo programar el envío. El servicio de colas puede estar no disponible. Detalles: {str(e)}")
+            elif self.canal == "whatsapp":
+                try:
+                    tarea_compartir_whatsapp.delay(
+                        destinatario=self.destinatario,
+                        cuerpo=mensaje.cuerpo
+                    )
+
+                    return ResultadoEnvio(
+                        estado=EstadoEnvio.ACEPTADO,
+                        canal=self.canal,
+                        mensaje="La solicitud de WhatsApp ha sido aceptada y se está procesando en segundo plano."
+                    )
+                except Exception as e:
+                    raise BrokerConnectionError(f"No se pudo programar el envío de WhatsApp. Detalles: {str(e)}")
             
             return ResultadoEnvio(
                 estado=EstadoEnvio.FALLIDO,
